@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Text.Json;
 using BepInEx;
 using Confluent.Kafka;
 using R2API;
 using RoR2;
+using Sevriukoff.MetaRun.Mod.Base;
 
 namespace Sevriukoff.MetaRun.Mod;
 
@@ -18,6 +20,9 @@ public class Main : BaseUnityPlugin
     public const string PluginAuthor = "HookAjor";
     public const string PluginName = "MetaRun";
     public const string PluginVersion = "0.0.1";
+
+    private readonly TrackerContainer _trackerContainer = new();
+    private readonly IProducer _producer = new KafkaProducer();
     
     public void Awake()
     {
@@ -25,20 +30,8 @@ public class Main : BaseUnityPlugin
             @"C:\Users\Bellatrix\AppData\Roaming\r2modmanPlus-local\RiskOfRain2\profiles\DevMod\BepInEx\plugins\Hook Ajor-MetaRun\librdkafka\x64\librdkafka.dll";
         Library.Load(librdkafka);
 
-        On.RoR2.HealthComponent.TakeDamage += (orig, self, info) =>
-        {
-            orig(self, info);
-        };
-
-        On.RoR2.HealthComponent.Heal += (orig, self, amount, mask, regen) =>
-        {
-            return orig(self, amount, mask, regen);
-        };
-
-        GlobalEventManager.onCharacterDeathGlobal += report =>
-        {
-
-        };
+        _trackerContainer.OnEventTracked += o => _producer.Produce(JsonSerializer.Serialize(o));
+        _trackerContainer.StartTracking();
     }
 
     private void Update()

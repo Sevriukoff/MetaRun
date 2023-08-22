@@ -3,6 +3,7 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <RootNamespace>Sevriukoff.MetaRun.Domain</RootNamespace>
+        <LangVersion>preview</LangVersion>
     </PropertyGroup>
 
 </Project>
