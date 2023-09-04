@@ -6,6 +6,7 @@ public enum EventType
     CharacterDamageTake,
     CharacterMobKill,
     CharacterHeal,
+    CharacterMove,
     CharacterGoldCoinCollect,
     CharacterLunarCoinCollect,
     CharacterInventoryChange,
@@ -14,6 +15,7 @@ public enum EventType
     CharacterStageFinish,
     CharacterDead,
     RunStart,
+    RunStageCompleted,
     RunPause,
     RunFinish,
     MobSpawn
