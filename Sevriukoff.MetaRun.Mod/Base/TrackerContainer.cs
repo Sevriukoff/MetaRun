@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Sevriukoff.MetaRun.Domain;
+using Sevriukoff.MetaRun.Domain.Base;
 
 namespace Sevriukoff.MetaRun.Mod.Base;
 
@@ -9,7 +11,7 @@ public class TrackerContainer
 {
     private readonly List<BaseEventTracker> _trackers = new();
 
-    public event Action<object> OnEventTracked; 
+    public event Action<EventMetaData> OnEventTracked; 
 
     public TrackerContainer()
     {
@@ -36,7 +38,7 @@ public class TrackerContainer
         _trackers.ForEach(x => x.StopProcessing());
     }
 
-    private void EventTracked(object trackedEvent)
+    private void EventTracked(EventMetaData trackedEvent)
     {
         OnEventTracked?.Invoke(trackedEvent);
     }

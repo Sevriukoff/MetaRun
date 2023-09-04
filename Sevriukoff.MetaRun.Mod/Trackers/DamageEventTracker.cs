@@ -1,9 +1,15 @@
-﻿using On.RoR2;
+﻿using System;
+using RoR2;
 using Sevriukoff.MetaRun.Domain;
+using Sevriukoff.MetaRun.Domain.Base;
 using Sevriukoff.MetaRun.Domain.Enum;
+using Sevriukoff.MetaRun.Domain.Events;
 using Sevriukoff.MetaRun.Mod.Base;
 using CharacterBody = RoR2.CharacterBody;
 using DamageInfo = RoR2.DamageInfo;
+using DamageType = Sevriukoff.MetaRun.Domain.Enum.DamageType;
+using HealthComponent = On.RoR2.HealthComponent;
+using Run = RoR2.Run;
 
 namespace Sevriukoff.MetaRun.Mod.Trackers;
 
@@ -28,49 +34,51 @@ public class DamageEventTracker : BaseEventTracker
             var attackerCharacterBody = attacker.GetComponent<CharacterBody>();
             
             var currentDamage = damageInfo.crit ? damageInfo.damage * 2 : damageInfo.damage;
-            var damageEventAttacker = new GameObject();
-            var damageEventTarget = new GameObject();
-            var damageEvent = new DamageEvent()
+            var currentRun = Run.instance;
+            var runTime = TimeSpan.FromSeconds(currentRun.time);
+
+            EventMetaData eventMetadata = null;
+            var eventData = new DamageEvent
             {
                 Damage = currentDamage,
                 DamageType = (DamageType)(uint)damageInfo.damageType,
                 DotType = (DotIndex)(int)damageInfo.dotIndex,
                 IsCrit = damageInfo.crit,
-                IsRejected = damageInfo.rejected,
-                Attacker = damageEventAttacker,
-                Target = damageEventTarget
+                IsRejected = damageInfo.rejected
             };
-
+            
             if (damageInfo.inflictor != null)
-            {
-                damageEvent.Inflictor = damageInfo.inflictor.name;
-            }
+                eventData.Inflictor = damageInfo.inflictor.name;
             else if (damageInfo.procChainMask.mask > 0)
-            {
-                damageEvent.Inflictor = damageInfo.procChainMask.ToString();
-            }
-
+                eventData.Inflictor = damageInfo.procChainMask.ToString();
+            
             if (attacker != null && attackerCharacterBody != null && attackerCharacterBody.isPlayerControlled)
             {
-                damageEventAttacker.PlayerId = attacker.GetComponent<UnityEngine.Networking.NetworkIdentity>()
-                    .netId.Value;
-                damageEventAttacker.Name = attacker.name;
+                var networkUser = Util.LookUpBodyNetworkUser(attacker);
 
-                damageEventTarget.Name = self.name;
-                damageEventTarget.IsElite = self.GetComponent<CharacterBody>().isElite;
-                damageEventTarget.IsBoss = self.GetComponent<CharacterBody>().isBoss;
+                eventData.Enemy = new Monster(self.name, self.body.isElite, self.body.isBoss);
+                
+                eventMetadata = new EventMetaData(EventType.CharacterDamageDeal, runTime, currentRun.GetUniqueId())
+                {
+                    PlayerId = networkUser.id.steamId.steamValue,
+                    Data = eventData
+                };
             }
             else
             {
-                damageEventAttacker.Name = attacker.name;
-                damageEventAttacker.IsElite = attackerCharacterBody.isElite;
-                damageEventAttacker.IsBoss = attackerCharacterBody.isBoss;
+                var networkUser = Util.LookUpBodyNetworkUser(self.body);
 
-                damageEventTarget.PlayerId = self.netId.Value;
-                damageEventTarget.Name = self.name;
+                eventData.Enemy = new Monster(attackerCharacterBody.name, attackerCharacterBody.isElite,
+                    attackerCharacterBody.isBoss);
+                
+                eventMetadata = new EventMetaData(EventType.CharacterDamageTake, runTime, currentRun.GetUniqueId())
+                {
+                    PlayerId = networkUser.id.steamId.steamValue,
+                    Data = eventData
+                };
             }
-            
-            OnEventProcessed(damageEvent);
+
+            OnEventProcessed(eventMetadata);
         }
         finally
         {
@@ -78,3 +86,4 @@ public class DamageEventTracker : BaseEventTracker
         }
     }
 }
+
