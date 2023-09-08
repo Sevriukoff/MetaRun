@@ -7,6 +7,7 @@ using RoR2;
 using Sevriukoff.MetaRun.Domain;
 using Sevriukoff.MetaRun.Domain.Base;
 using Sevriukoff.MetaRun.Mod.Base;
+using Sevriukoff.MetaRun.Mod.Trackers.Character;
 
 namespace Sevriukoff.MetaRun.Mod;
 
@@ -25,7 +26,7 @@ public class Main : BaseUnityPlugin
     public const string PluginName = "MetaRun";
     public const string PluginVersion = "0.0.1";
 
-    private TrackerContainer _trackerContainer;
+    private TrackerManager _trackerManager;
     private IProducer _producer;
     
     public void Awake()
@@ -34,24 +35,34 @@ public class Main : BaseUnityPlugin
             @"C:\Users\Bellatrix\AppData\Roaming\r2modmanPlus-local\RiskOfRain2\profiles\DevMod\BepInEx\plugins\Hook Ajor-MetaRun\librdkafka\x64\librdkafka.dll";
         Library.Load(librdkafka);
         
-        _trackerContainer = new();
+        _trackerManager = new();
         _producer = new KafkaProducer("localhost:9092");
 
         On.RoR2.Run.Start += (orig, self) =>
         {
-            _trackerContainer.OnEventTracked += OnOnEventTracked;
-            _trackerContainer.StartTracking();
+            _trackerManager.OnEventTracked += OnOnEventTracked;
+            _trackerManager.StartTracking();
             
             orig(self);
         };
 
         On.RoR2.Run.BeginGameOver += (orig, self, def) =>
         {
-            _trackerContainer.OnEventTracked -= OnOnEventTracked;
-            _trackerContainer.StopTracking();
+            _trackerManager.OnEventTracked -= OnOnEventTracked;
+            _trackerManager.StopTracking();
             
             orig(self, def);
         };
+        
+        _trackerManager.ConfigureTracker<CharacterMovedTracker>
+        (
+            new TrackerOptions
+            {
+                IsActive = false,
+                Priority = "low",
+                OnEventTracked = x => _producer.ProduceAsync(x)
+            }
+        );
         
         var networkUsers = NetworkUser.instancesList;
 
