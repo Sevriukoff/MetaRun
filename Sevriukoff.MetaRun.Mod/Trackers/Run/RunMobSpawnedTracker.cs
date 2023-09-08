@@ -4,13 +4,13 @@ using Sevriukoff.MetaRun.Mod.Base;
 using CharacterBody = RoR2.CharacterBody;
 using ProcChainMask = RoR2.ProcChainMask;
 
-namespace Sevriukoff.MetaRun.Mod.Trackers;
+namespace Sevriukoff.MetaRun.Mod.Trackers.Run;
 
-public class MobSpawnEventTracker : BaseEventTracker
+public class RunMobSpawnedTracker : BaseEventTracker
 {
     public override void StartProcessing()
     {
-        Run.OnServerCharacterBodySpawned += CharacterBodySpawned;
+        On.RoR2.Run.OnServerCharacterBodySpawned += CharacterBodySpawned;
         HealthComponent.Heal += HealthComponentOnHeal;
     }
     
@@ -19,7 +19,7 @@ public class MobSpawnEventTracker : BaseEventTracker
         HealthComponent.Heal -= HealthComponentOnHeal;
     }
     
-    private void CharacterBodySpawned(Run.orig_OnServerCharacterBodySpawned orig, RoR2.Run self,
+    private void CharacterBodySpawned(On.RoR2.Run.orig_OnServerCharacterBodySpawned orig, RoR2.Run self,
         CharacterBody characterBody)
     {
         orig(self, characterBody);
