@@ -1,13 +1,13 @@
-﻿using System;
-using Sevriukoff.MetaRun.Domain.Base;
+﻿using Sevriukoff.MetaRun.Domain.Base;
+using Sevriukoff.MetaRun.Domain.Entities;
 using Sevriukoff.MetaRun.Domain.Enum;
 
-namespace Sevriukoff.MetaRun.Domain.Events;
+namespace Sevriukoff.MetaRun.Domain.Events.Character;
 
 /// <summary>
 /// Событие, описывающие нанесение урона персонажем, или получение урона персонажем от монстров.
 /// </summary>
-public class DamageEvent : IEventData
+public class CharacterDamageEvent : IEventData
 {
     public float Damage { get; set; }
     public DamageType DamageType { get; set; }

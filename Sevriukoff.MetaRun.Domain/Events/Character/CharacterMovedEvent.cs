@@ -1,13 +1,11 @@
-﻿using System;
-using Sevriukoff.MetaRun.Domain.Base;
-using Sevriukoff.MetaRun.Domain.Enum;
+﻿using Sevriukoff.MetaRun.Domain.Base;
 
-namespace Sevriukoff.MetaRun.Domain.Events;
+namespace Sevriukoff.MetaRun.Domain.Events.Character;
 
 /// <summary>
 /// Событие, описывающие пройдённую дистанцию персонажем.
 /// </summary>
-public class MoveEvent : IEventData
+public class CharacterMovedEvent : IEventData
 {
     public float Distance { get; set; }
 

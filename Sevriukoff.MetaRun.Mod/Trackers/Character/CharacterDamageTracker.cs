@@ -2,18 +2,19 @@
 using RoR2;
 using Sevriukoff.MetaRun.Domain;
 using Sevriukoff.MetaRun.Domain.Base;
+using Sevriukoff.MetaRun.Domain.Entities;
 using Sevriukoff.MetaRun.Domain.Enum;
 using Sevriukoff.MetaRun.Domain.Events;
+using Sevriukoff.MetaRun.Domain.Events.Character;
 using Sevriukoff.MetaRun.Mod.Base;
 using CharacterBody = RoR2.CharacterBody;
 using DamageInfo = RoR2.DamageInfo;
 using DamageType = Sevriukoff.MetaRun.Domain.Enum.DamageType;
 using HealthComponent = On.RoR2.HealthComponent;
-using Run = RoR2.Run;
 
-namespace Sevriukoff.MetaRun.Mod.Trackers;
+namespace Sevriukoff.MetaRun.Mod.Trackers.Character;
 
-public class DamageEventTracker : BaseEventTracker
+public class CharacterDamageTracker : BaseEventTracker
 {
     public override void StartProcessing()
     {
@@ -34,11 +35,11 @@ public class DamageEventTracker : BaseEventTracker
             var attackerCharacterBody = attacker.GetComponent<CharacterBody>();
             
             var currentDamage = damageInfo.crit ? damageInfo.damage * 2 : damageInfo.damage;
-            var currentRun = Run.instance;
-            var runTime = TimeSpan.FromSeconds(currentRun.time);
+            var currentRun = RoR2.Run.instance;
+            var runTime = TimeSpan.FromSeconds(currentRun.GetRunStopwatch());
 
             EventMetaData eventMetadata = null;
-            var eventData = new DamageEvent
+            var eventData = new CharacterDamageEvent
             {
                 Damage = currentDamage,
                 DamageType = (DamageType)(uint)damageInfo.damageType,
@@ -56,11 +57,12 @@ public class DamageEventTracker : BaseEventTracker
             {
                 var networkUser = Util.LookUpBodyNetworkUser(attacker);
 
-                eventData.Enemy = new Monster(self.name, self.body.isElite, self.body.isBoss);
+                eventData.Enemy = new Monster(self.name, self.body.isElite, self.body.isBoss,
+                    (TeamType)(sbyte)self.body.teamComponent.teamIndex);
                 
-                eventMetadata = new EventMetaData(EventType.CharacterDamageDeal, runTime, currentRun.GetUniqueId())
+                eventMetadata = new EventMetaData(EventType.CharacterDealtDamage, runTime, currentRun.GetUniqueId(),
+                    networkUser.id.steamId.steamValue)
                 {
-                    PlayerId = networkUser.id.steamId.steamValue,
                     Data = eventData
                 };
             }
@@ -69,11 +71,11 @@ public class DamageEventTracker : BaseEventTracker
                 var networkUser = Util.LookUpBodyNetworkUser(self.body);
 
                 eventData.Enemy = new Monster(attackerCharacterBody.name, attackerCharacterBody.isElite,
-                    attackerCharacterBody.isBoss);
+                    attackerCharacterBody.isBoss, (TeamType)(sbyte)attackerCharacterBody.teamComponent.teamIndex);
                 
-                eventMetadata = new EventMetaData(EventType.CharacterDamageTake, runTime, currentRun.GetUniqueId())
+                eventMetadata = new EventMetaData(EventType.CharacterTookDamage, runTime, currentRun.GetUniqueId(),
+                    networkUser.id.steamId.steamValue)
                 {
-                    PlayerId = networkUser.id.steamId.steamValue,
                     Data = eventData
                 };
             }

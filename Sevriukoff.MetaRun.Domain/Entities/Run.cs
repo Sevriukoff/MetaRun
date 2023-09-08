@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Sevriukoff.MetaRun.Domain.Enum;
 
-namespace Sevriukoff.MetaRun.Domain;
+namespace Sevriukoff.MetaRun.Domain.Entities;
 
 public class Run
 {

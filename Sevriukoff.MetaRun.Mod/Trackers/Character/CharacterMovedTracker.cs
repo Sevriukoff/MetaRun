@@ -1,23 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using On.RoR2;
 using R2API.MiscHelpers;
-using Sevriukoff.MetaRun.Domain;
 using Sevriukoff.MetaRun.Domain.Base;
 using Sevriukoff.MetaRun.Domain.Events;
+using Sevriukoff.MetaRun.Domain.Events.Character;
 using Sevriukoff.MetaRun.Mod.Base;
 using UnityEngine;
 using EventType = Sevriukoff.MetaRun.Domain.Enum.EventType;
-using NetworkUserId = RoR2.NetworkUserId;
 using ProcChainMask = RoR2.ProcChainMask;
-using Run = RoR2.Run;
 using Util = RoR2.Util;
 using Vector3 = UnityEngine.Vector3;
 
-namespace Sevriukoff.MetaRun.Mod.Trackers;
+namespace Sevriukoff.MetaRun.Mod.Trackers.Character;
 
-public class DistanceTracker : BaseEventTracker
+public class CharacterMovedTracker : BaseEventTracker
 {
     private Dictionary<ulong, Vector3> _charactersLastPos;
     private Dictionary<ulong, Transform> _charactersTransform;
@@ -44,7 +41,7 @@ public class DistanceTracker : BaseEventTracker
     private float Initialization(HealthComponent.orig_Heal orig, RoR2.HealthComponent self,
         float amount, ProcChainMask procChainMask, bool nonRegen)
     {
-        _totalCharacterRun = Run.instance.userMasters.Count;
+        _totalCharacterRun = RoR2.Run.instance.userMasters.Count;
         
         if (_charactersTransform.Count == _totalCharacterRun)
         {
@@ -63,7 +60,7 @@ public class DistanceTracker : BaseEventTracker
         return orig(self, amount, procChainMask, nonRegen);
     }
     
-    private void Run_Update(On.RoR2.Run.orig_Update orig, Run self)
+    private void Run_Update(On.RoR2.Run.orig_Update orig, RoR2.Run self)
     {
         foreach (var (player, currentTransform) in _charactersTransform)
         {
@@ -77,11 +74,10 @@ public class DistanceTracker : BaseEventTracker
             
             _charactersLastPos[player] = currentPos;
 
-            var eventMetadata = new EventMetaData(EventType.CharacterMove, TimeSpan.FromSeconds(self.time),
-                self.GetUniqueId())
+            var eventMetadata = new EventMetaData(EventType.CharacterMoved, TimeSpan.FromSeconds(self.time),
+                self.GetUniqueId(), player)
             {
-                PlayerId = player,
-                Data = new MoveEvent
+                Data = new CharacterMovedEvent
                 {
                     Distance = distance,
                     PrevPos = new Domain.Base.Vector3(lastPos.x, lastPos.y, lastPos.z),

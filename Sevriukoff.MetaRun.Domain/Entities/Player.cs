@@ -1,4 +1,4 @@
-﻿namespace Sevriukoff.MetaRun.Domain;
+﻿namespace Sevriukoff.MetaRun.Domain.Entities;
 
 /// <summary>
 /// IEntity, Domain Entity

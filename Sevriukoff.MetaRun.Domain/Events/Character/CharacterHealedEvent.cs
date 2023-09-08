@@ -1,13 +1,11 @@
-﻿using System;
-using Sevriukoff.MetaRun.Domain.Base;
-using Sevriukoff.MetaRun.Domain.Enum;
+﻿using Sevriukoff.MetaRun.Domain.Base;
 
-namespace Sevriukoff.MetaRun.Domain.Events;
+namespace Sevriukoff.MetaRun.Domain.Events.Character;
 
 /// <summary>
 /// Событие, описывающие восстановление здоровья персонажа.
 /// </summary>
-public class HealEvent : IEventData
+public class CharacterHealedEvent : IEventData
 {
     public float HealAmount { get; set; }
     public bool IsRegen { get; set; }
