@@ -7,4 +7,5 @@ namespace Sevriukoff.MetaRun.Mod;
 public interface IProducer
 { 
     Task ProduceAsync(EventMetaData gameEvent);
+    void Produce(EventMetaData gameEvent);
 }
