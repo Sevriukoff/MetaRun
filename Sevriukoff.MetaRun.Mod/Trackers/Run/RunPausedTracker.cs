@@ -2,6 +2,7 @@
 using Sevriukoff.MetaRun.Domain.Base;
 using Sevriukoff.MetaRun.Domain.Enum;
 using Sevriukoff.MetaRun.Mod.Base;
+using Sevriukoff.MetaRun.Mod.Utils;
 
 namespace Sevriukoff.MetaRun.Mod.Trackers.Run;
 
@@ -29,9 +30,8 @@ public class RunPausedTracker : BaseEventTracker
             
             if (!isPaused)
                 return;
-            
-            var eventMetadata = new EventMetaData(EventType.RunPaused, TimeSpan.FromSeconds(self.GetRunStopwatch()),
-                self.GetUniqueId(), 123456789);
+
+            var eventMetadata = EventMetaDataUtil.CreateEvent(EventType.RunPaused);
         
             OnEventProcessed(eventMetadata);
         }

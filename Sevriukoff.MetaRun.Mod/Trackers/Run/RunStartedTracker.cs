@@ -6,6 +6,7 @@ using Sevriukoff.MetaRun.Domain.Enum;
 using Sevriukoff.MetaRun.Domain.Events;
 using Sevriukoff.MetaRun.Domain.Events.Run;
 using Sevriukoff.MetaRun.Mod.Base;
+using Sevriukoff.MetaRun.Mod.Utils;
 using HealthComponent = On.RoR2.HealthComponent;
 using ProcChainMask = RoR2.ProcChainMask;
 
@@ -27,6 +28,9 @@ public class RunStartedTracker : BaseEventTracker
         float amount, ProcChainMask procChainMask, bool nonRegen)
     {
         var run = RoR2.Run.instance;
+
+        if (run.userMasters.Any(x => !x.Value.hasBody))
+            return orig(self, amount, procChainMask, nonRegen);
         
         var playerCharacters =
             run.userMasters.ToDictionary(x => x.Key.steamId.steamValue,
@@ -50,23 +54,21 @@ public class RunStartedTracker : BaseEventTracker
                 dlcs.Add(str[1]);
         }
 
-        var host = run.userMasters.First(x => x.Value.isServer).Key; // Possible Empty Sequence
-        
-        var eventMetadata = new EventMetaData(EventType.RunStarted, TimeSpan.FromSeconds(run.GetRunStopwatch()),
-            run.GetUniqueId(), host.steamId.steamValue)
-        {
-            Data = new RunStartedEvent
+        var eventMetadata = EventMetaDataUtil.CreateEvent
+        (
+            EventType.RunStarted,
+            new RunStartedEvent
             {
                 Seed = run.seed,
                 ServerName = serverName,
-                Difficulty = (RunDifficulty)(int)run.selectedDifficulty,
-                GameMode = (GameMode)(int)run.gameModeIndex,
+                Difficulty = (RunDifficulty) (int) run.selectedDifficulty,
+                GameMode = (GameMode) (int) run.gameModeIndex,
                 Artifacts = artifacts.ToArray(),
                 Dlcs = dlcs.ToArray(),
                 PlayerCharacters = playerCharacters
             }
-        };
-        
+        );
+
         OnEventProcessed(eventMetadata);
 
         HealthComponent.Heal -= InitializationCharacters;

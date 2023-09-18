@@ -5,6 +5,7 @@ using Sevriukoff.MetaRun.Domain.Enum;
 using Sevriukoff.MetaRun.Domain.Events;
 using Sevriukoff.MetaRun.Domain.Events.Character;
 using Sevriukoff.MetaRun.Mod.Base;
+using Sevriukoff.MetaRun.Mod.Utils;
 using ProcChainMask = RoR2.ProcChainMask;
 
 namespace Sevriukoff.MetaRun.Mod.Trackers.Character;
@@ -26,19 +27,19 @@ public class CharacterHealedTracker : BaseEventTracker
     {
         if (!self.body.isPlayerControlled)
             return orig(self, amount, procChainMask, nonRegen);
-
-        var currentRun = RoR2.Run.instance;
+        
         var playerId = self.body.master.playerCharacterMasterController.networkUser.id.steamId.steamValue;
 
-        var eventMetadata = new EventMetaData(EventType.CharacterHealed,
-            TimeSpan.FromSeconds(currentRun.GetRunStopwatch()), currentRun.GetUniqueId(), playerId)
-        {
-            Data = new CharacterHealedEvent
+        var eventMetadata = EventMetaDataUtil.CreateEvent
+        (
+            EventType.CharacterHealed,
+            new CharacterHealedEvent
             {
                 HealAmount = amount,
                 IsRegen = !nonRegen
-            }
-        };
+            },
+            playerId
+        );
         
         OnEventProcessed(eventMetadata);
 

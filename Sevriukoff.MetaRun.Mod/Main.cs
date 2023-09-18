@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using BepInEx;
 using Confluent.Kafka;
 using R2API;
@@ -8,6 +9,7 @@ using Sevriukoff.MetaRun.Domain;
 using Sevriukoff.MetaRun.Domain.Base;
 using Sevriukoff.MetaRun.Mod.Base;
 using Sevriukoff.MetaRun.Mod.Trackers.Character;
+using Sevriukoff.MetaRun.Mod.Utils;
 
 namespace Sevriukoff.MetaRun.Mod;
 
@@ -24,7 +26,7 @@ public class Main : BaseUnityPlugin
     public const string PluginGuid = PluginAuthor + "." + PluginName;
     public const string PluginAuthor = "HookAjor";
     public const string PluginName = "MetaRun";
-    public const string PluginVersion = "0.0.1";
+    public const string PluginVersion = "0.1.0";
 
     private TrackerManager _trackerManager;
     private IProducer _producer;
@@ -37,6 +39,7 @@ public class Main : BaseUnityPlugin
         
         _trackerManager = new();
         _producer = new KafkaProducer("localhost:9092");
+        EventMetaDataUtil.Init();
 
         On.RoR2.Run.Start += (orig, self) =>
         {
@@ -54,16 +57,30 @@ public class Main : BaseUnityPlugin
             orig(self, def);
         };
         
-        _trackerManager.ConfigureTracker<CharacterMovedTracker>
+        /*_trackerManager.ConfigureTracker<CharacterMovedTracker>
         (
             new TrackerOptions
             {
                 IsActive = false,
-                Priority = "low",
-                OnEventTracked = x => _producer.ProduceAsync(x)
             }
         );
-        
+
+        _trackerManager.ConfigureTracker<CharacterMinionDamageTracker>
+        (
+            new TrackerOptions
+            {
+                IsActive = false,
+            }
+        );
+
+        _trackerManager.ConfigureTracker<CharacterHealedTracker>
+       (
+           new TrackerOptions
+           {
+               IsActive = false,
+           }
+       );*/
+
         var networkUsers = NetworkUser.instancesList;
 
         foreach (NetworkUser networkUser in networkUsers)

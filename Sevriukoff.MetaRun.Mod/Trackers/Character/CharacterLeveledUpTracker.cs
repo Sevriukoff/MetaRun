@@ -4,6 +4,7 @@ using Sevriukoff.MetaRun.Domain.Base;
 using Sevriukoff.MetaRun.Domain.Enum;
 using Sevriukoff.MetaRun.Domain.Events.Character;
 using Sevriukoff.MetaRun.Mod.Base;
+using Sevriukoff.MetaRun.Mod.Utils;
 
 namespace Sevriukoff.MetaRun.Mod.Trackers.Character;
 
@@ -27,17 +28,17 @@ public class CharacterLeveledUpTracker : BaseEventTracker
         if (!self.isLocalPlayer)
             return;
 
-        var currentRun = RoR2.Run.instance;
         var playerId = self.master.playerCharacterMasterController.networkUser.id.steamId.steamValue;
 
-        var eventMetadata = new EventMetaData(EventType.CharacterLeveledUp, TimeSpan.FromSeconds(currentRun.GetRunStopwatch()),
-            currentRun.GetUniqueId(), playerId)
-        {
-            Data = new CharacterLeveledUpEvent
+        var eventMetadata = EventMetaDataUtil.CreateEvent
+        (
+            EventType.CharacterLeveledUp,
+            new CharacterLeveledUpEvent
             {
                 Level = newLevel - oldLevel
-            }
-        };
+            },
+            playerId
+        );
         
         OnEventProcessed(eventMetadata);
     }

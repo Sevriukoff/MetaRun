@@ -4,6 +4,7 @@ using Sevriukoff.MetaRun.Domain.Base;
 using Sevriukoff.MetaRun.Domain.Enum;
 using Sevriukoff.MetaRun.Domain.Events.Character;
 using Sevriukoff.MetaRun.Mod.Base;
+using Sevriukoff.MetaRun.Mod.Utils;
 using CharacterMaster = On.RoR2.CharacterMaster;
 using Inventory = On.RoR2.Inventory;
 using ItemDef = RoR2.ItemDef;
@@ -31,21 +32,20 @@ public class CharacterInventoryChangedTracker : BaseEventTracker
 
         if (!self.GetBody().isPlayerControlled)
             return;
-
-        var currentRun = RoR2.Run.instance;
+        
         var playerId = self.playerCharacterMasterController.networkUser.id.steamId.steamValue;
         var itemDef = ItemCatalog.GetItemDef(itemIndex);
 
-        var eventMetadata = new EventMetaData(EventType.CharacterInventoryItemAdded,
-            TimeSpan.FromSeconds(currentRun.GetRunStopwatch()), currentRun.GetUniqueId(), playerId)
-        {
-            Data = new CharacterInventoryChangedEvent
+        var eventMetadata = EventMetaDataUtil.CreateEvent(
+            EventType.CharacterInventoryItemAdded,
+            new CharacterInventoryChangedEvent
             {
                 ItemId = (int) itemIndex,
                 ItemName = itemDef.name,
                 ItemRare = (ItemRare) (int) itemDef.tier
-            }
-        };
+            },
+            playerId
+        );
         
         OnEventProcessed(eventMetadata);
     }
@@ -58,20 +58,20 @@ public class CharacterInventoryChangedTracker : BaseEventTracker
         if (self.playerControllerId < 0)
             return;
         
-        var currentRun = RoR2.Run.instance;
         var playerId = self.GetComponent<CharacterBody>().master.playerCharacterMasterController
             .networkUser.id.steamId.steamValue; // TODO: Check
 
-        var eventMetadata = new EventMetaData(EventType.CharacterInventoryItemRemoved,
-            TimeSpan.FromSeconds(currentRun.GetRunStopwatch()), currentRun.GetUniqueId(), playerId)
-        {
-            Data = new CharacterInventoryChangedEvent
+        var eventMetadata = EventMetaDataUtil.CreateEvent
+        (
+            EventType.CharacterInventoryItemRemoved,
+            new CharacterInventoryChangedEvent
             {
                 ItemId = (int) itemDef.itemIndex,
                 ItemName = itemDef.name,
                 ItemRare = (ItemRare) (int) itemDef.tier
-            }
-        };
+            },
+            playerId
+        );
         
         OnEventProcessed(eventMetadata);
     }

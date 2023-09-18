@@ -1,4 +1,5 @@
 ﻿using System;
+using On.RoR2;
 using Sevriukoff.MetaRun.Domain;
 using Sevriukoff.MetaRun.Domain.Base;
 using Sevriukoff.MetaRun.Domain.Entities;
@@ -6,7 +7,9 @@ using Sevriukoff.MetaRun.Domain.Enum;
 using Sevriukoff.MetaRun.Domain.Events;
 using Sevriukoff.MetaRun.Domain.Events.Character;
 using Sevriukoff.MetaRun.Mod.Base;
+using Sevriukoff.MetaRun.Mod.Utils;
 using CharacterBody = RoR2.CharacterBody;
+using DamageDealtMessage = RoR2.DamageDealtMessage;
 using DamageInfo = RoR2.DamageInfo;
 using DamageType = Sevriukoff.MetaRun.Domain.Enum.DamageType;
 using EventType = Sevriukoff.MetaRun.Domain.Enum.EventType;
@@ -16,14 +19,19 @@ namespace Sevriukoff.MetaRun.Mod.Trackers.Character;
 
 public class CharacterMinionDamageTracker : BaseEventTracker
 {
+    private CharacterMinionDamageEvent _damageEvent;
+    private EventType _eventType;
+    private ulong _playerId;
+    
     public override void StartProcessing()
     {
         HealthComponent.TakeDamage += MinionDamage;
+        RoR2.GlobalEventManager.onClientDamageNotified += OnCalculatedDamage;
     }
-
     public override void StopProcessing()
     {
         HealthComponent.TakeDamage -= MinionDamage;
+        RoR2.GlobalEventManager.onClientDamageNotified -= OnCalculatedDamage;
     }
     
     private void MinionDamage(HealthComponent.orig_TakeDamage orig, RoR2.HealthComponent self, DamageInfo damageInfo)
@@ -35,47 +43,53 @@ public class CharacterMinionDamageTracker : BaseEventTracker
         if (attacker == null)
             return;
 
-        var currentRun = RoR2.Run.instance;
-        var currentDamage = damageInfo.crit ? damageInfo.damage * 2 : damageInfo.damage;
         var attackerCharacterBody = attacker.GetComponent<CharacterBody>();
         var playerCharacterMaster = attackerCharacterBody.master.minionOwnership.ownerMaster;
         var enemyCharacterBody = self.body;
-        var eventType = EventType.CharacterMinionDealtDamage;
+        _eventType = EventType.CharacterMinionDealtDamage;
 
         if (playerCharacterMaster == null)
         {
             playerCharacterMaster = self.body.master.minionOwnership.ownerMaster;
             enemyCharacterBody = attacker.GetComponent<CharacterBody>();
-            eventType = EventType.CharacterMinionTookDamage;
+            _eventType = EventType.CharacterMinionTookDamage;
 
             if (playerCharacterMaster == null)
                 return;
         }
         
-        var playerId = playerCharacterMaster.playerCharacterMasterController.networkUser.id.steamId.steamValue;
+        _playerId = playerCharacterMaster.playerCharacterMasterController.networkUser.id.steamId.steamValue;
         string inflictorName = string.Empty;
 
         if (damageInfo.procChainMask.mask > 0)
             inflictorName = damageInfo.procChainMask.ToString();
         else if (damageInfo.inflictor != null)
             inflictorName = damageInfo.inflictor.name;
-        
-        var eventMetaData = new EventMetaData(eventType, TimeSpan.FromSeconds(currentRun.GetRunStopwatch()),
-            currentRun.GetUniqueId(), playerId)
+
+        _damageEvent = new CharacterMinionDamageEvent
         {
-            Data = new CharacterMinionDamageEvent
-            {
-                Damage = currentDamage,
-                DamageType = (DamageType) damageInfo.damageType,
-                DotType = (DotIndex) damageInfo.dotIndex,
-                IsCrit = damageInfo.crit,
-                IsRejected = damageInfo.rejected,
-                Inflictor = inflictorName,
-                Enemy = new Monster(enemyCharacterBody.name, enemyCharacterBody.isElite, enemyCharacterBody.isBoss,
-                    (TeamType) (sbyte) enemyCharacterBody.teamComponent.teamIndex)
-            }
+            DamageType = (DamageType) damageInfo.damageType,
+            DotType = (DotIndex) damageInfo.dotIndex,
+            IsCrit = damageInfo.crit,
+            IsRejected = damageInfo.rejected,
+            Inflictor = inflictorName,
+            Enemy = new Monster(enemyCharacterBody.name, enemyCharacterBody.isElite, enemyCharacterBody.isBoss,
+                (TeamType) (sbyte) enemyCharacterBody.teamComponent.teamIndex)
         };
+    }
+    
+    private void OnCalculatedDamage(DamageDealtMessage obj)
+    {
+        _damageEvent.Damage = obj.damage;
+        
+        var eventMetaData = EventMetaDataUtil.CreateEvent
+        (
+            _eventType,
+            _damageEvent,
+            _playerId
+        );
         
         OnEventProcessed(eventMetaData);
     }
+
 }

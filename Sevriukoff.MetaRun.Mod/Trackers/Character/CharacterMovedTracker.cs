@@ -6,6 +6,7 @@ using Sevriukoff.MetaRun.Domain.Base;
 using Sevriukoff.MetaRun.Domain.Events;
 using Sevriukoff.MetaRun.Domain.Events.Character;
 using Sevriukoff.MetaRun.Mod.Base;
+using Sevriukoff.MetaRun.Mod.Utils;
 using UnityEngine;
 using EventType = Sevriukoff.MetaRun.Domain.Enum.EventType;
 using ProcChainMask = RoR2.ProcChainMask;
@@ -71,21 +72,25 @@ public class CharacterMovedTracker : BaseEventTracker
 
             var lastPos = _charactersLastPos[player];
             var distance = Vector3.Distance(lastPos, currentPos);
-            
+
+            if (distance == 0)
+                return;
+
             _charactersLastPos[player] = currentPos;
 
-            var eventMetadata = new EventMetaData(EventType.CharacterMoved, TimeSpan.FromSeconds(self.time),
-                self.GetUniqueId(), player)
-            {
-                Data = new CharacterMovedEvent
+            var eventMetadata = EventMetaDataUtil.CreateEvent
+            (
+                EventType.CharacterMoved,
+                new CharacterMovedEvent
                 {
                     Distance = distance,
                     PrevPos = new Domain.Base.Vector3(lastPos.x, lastPos.y, lastPos.z),
                     CurrentPos = new Domain.Base.Vector3(currentPos.x, currentPos.y, currentPos.z)
-                }
-            };
+                },
+                player
+            );
             
-            //OnEventProcessed(eventMetadata);
+            OnEventProcessed(eventMetadata);
         }
     }
 }
