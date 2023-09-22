@@ -20,9 +20,7 @@ public class RunLeveledUpTracker : BaseEventTracker
     
     private void AmbientLevelUp(On.RoR2.Run.orig_OnAmbientLevelUp orig, RoR2.Run self)
     {
-        var eventMetadata = EventMetaDataUtil.CreateEvent(EventType.RunLeveledUp);
-        
-        OnEventProcessed(eventMetadata);
+        CreateEventMetaData(EventType.RunLeveledUp);
         
         orig(self);
     }

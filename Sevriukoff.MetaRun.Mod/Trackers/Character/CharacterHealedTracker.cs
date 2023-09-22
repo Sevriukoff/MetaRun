@@ -30,7 +30,7 @@ public class CharacterHealedTracker : BaseEventTracker
         
         var playerId = self.body.master.playerCharacterMasterController.networkUser.id.steamId.steamValue;
 
-        var eventMetadata = EventMetaDataUtil.CreateEvent
+        CreateEventMetaData
         (
             EventType.CharacterHealed,
             new CharacterHealedEvent
@@ -40,8 +40,6 @@ public class CharacterHealedTracker : BaseEventTracker
             },
             playerId
         );
-        
-        OnEventProcessed(eventMetadata);
 
         return orig(self, amount, procChainMask, nonRegen);
     }

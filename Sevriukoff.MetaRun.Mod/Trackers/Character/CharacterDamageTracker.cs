@@ -63,6 +63,9 @@ public class CharacterDamageTracker : BaseEventTracker
             enemyCharacterBody = attacker.GetComponent<CharacterBody>();
         }
 
+        if (!playerCharacterBody.isPlayerControlled)
+            return;
+
         _eventType = eventType;
         _playerId = playerCharacterBody.master.netId.Value;
 
@@ -80,16 +83,12 @@ public class CharacterDamageTracker : BaseEventTracker
     
     private void OnCalculatedDamage(DamageDealtMessage obj)
     {
+        if (_damageEvent == null)
+            return;
+        
         _damageEvent.Damage = obj.damage;
 
-        var eventMetaData = EventMetaDataUtil.CreateEvent
-        (
-            _eventType, 
-            _damageEvent, 
-            _playerId
-        );
-        
-        OnEventProcessed(eventMetaData);
+        CreateEventMetaData(_eventType, _damageEvent, _playerId);
     }
 }
 

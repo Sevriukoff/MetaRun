@@ -30,10 +30,8 @@ public class RunPausedTracker : BaseEventTracker
             
             if (!isPaused)
                 return;
-
-            var eventMetadata = EventMetaDataUtil.CreateEvent(EventType.RunPaused);
         
-            OnEventProcessed(eventMetadata);
+            CreateEventMetaData(EventType.RunPaused);
         }
     }
 }

@@ -57,8 +57,8 @@ public class RunStageStartedTracker : BaseEventTracker
 
         if (self.playerCharacterMasterController == null || _interactables.Count == 0)
             return;
-
-        var eventMetadata = EventMetaDataUtil.CreateEvent
+        
+        CreateEventMetaData
         (
             EventType.RunStageStarted,
             new RunStageStartedEvent
@@ -69,8 +69,6 @@ public class RunStageStartedTracker : BaseEventTracker
                 Interactables = _interactables
             }
         );
-        
-        OnEventProcessed(eventMetadata);
         
         _interactables = new Dictionary<string, int>();
     }

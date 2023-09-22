@@ -35,19 +35,18 @@ public class CharacterInventoryChangedTracker : BaseEventTracker
         
         var playerId = self.playerCharacterMasterController.networkUser.id.steamId.steamValue;
         var itemDef = ItemCatalog.GetItemDef(itemIndex);
-
-        var eventMetadata = EventMetaDataUtil.CreateEvent(
-            EventType.CharacterInventoryItemAdded,
-            new CharacterInventoryChangedEvent
-            {
-                ItemId = (int) itemIndex,
-                ItemName = itemDef.name,
-                ItemRare = (ItemRare) (int) itemDef.tier
-            },
-            playerId
-        );
         
-        OnEventProcessed(eventMetadata);
+       CreateEventMetaData
+       (
+           EventType.CharacterInventoryItemAdded,
+           new CharacterInventoryChangedEvent
+           {
+               ItemId = (int) itemIndex,
+               ItemName = itemDef.name,
+               ItemRare = (ItemRare) (int) itemDef.tier
+           },
+           playerId
+       );
     }
     
     private void OnRemoveItem(Inventory.orig_RemoveItem_ItemDef_int orig, RoR2.Inventory self, ItemDef itemDef,
@@ -60,8 +59,8 @@ public class CharacterInventoryChangedTracker : BaseEventTracker
         
         var playerId = self.GetComponent<CharacterBody>().master.playerCharacterMasterController
             .networkUser.id.steamId.steamValue; // TODO: Check
-
-        var eventMetadata = EventMetaDataUtil.CreateEvent
+        
+        CreateEventMetaData
         (
             EventType.CharacterInventoryItemRemoved,
             new CharacterInventoryChangedEvent
@@ -72,7 +71,5 @@ public class CharacterInventoryChangedTracker : BaseEventTracker
             },
             playerId
         );
-        
-        OnEventProcessed(eventMetadata);
     }
 }

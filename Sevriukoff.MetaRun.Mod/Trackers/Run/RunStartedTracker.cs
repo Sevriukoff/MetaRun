@@ -54,8 +54,8 @@ public class RunStartedTracker : BaseEventTracker
                 dlcs.Add(str[1]);
         }
 
-        var eventMetadata = EventMetaDataUtil.CreateEvent
-        (
+        CreateEventMetaData
+        ( 
             EventType.RunStarted,
             new RunStartedEvent
             {
@@ -68,8 +68,6 @@ public class RunStartedTracker : BaseEventTracker
                 PlayerCharacters = playerCharacters
             }
         );
-
-        OnEventProcessed(eventMetadata);
 
         HealthComponent.Heal -= InitializationCharacters;
 

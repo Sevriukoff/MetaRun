@@ -73,23 +73,18 @@ public class CharacterMinionDamageTracker : BaseEventTracker
             IsCrit = damageInfo.crit,
             IsRejected = damageInfo.rejected,
             Inflictor = inflictorName,
-            Enemy = new Monster(enemyCharacterBody.name, enemyCharacterBody.isElite, enemyCharacterBody.isBoss,
-                (TeamType) (sbyte) enemyCharacterBody.teamComponent.teamIndex)
+            Enemy = new Monster(enemyCharacterBody.netId.Value, enemyCharacterBody.name, enemyCharacterBody.isElite,
+                enemyCharacterBody.isBoss, (TeamType) (sbyte) enemyCharacterBody.teamComponent.teamIndex)
         };
     }
     
     private void OnCalculatedDamage(DamageDealtMessage obj)
     {
+        if (_damageEvent == null)
+            return;
+        
         _damageEvent.Damage = obj.damage;
         
-        var eventMetaData = EventMetaDataUtil.CreateEvent
-        (
-            _eventType,
-            _damageEvent,
-            _playerId
-        );
-        
-        OnEventProcessed(eventMetaData);
+        CreateEventMetaData(_eventType, _damageEvent, _playerId);
     }
-
 }

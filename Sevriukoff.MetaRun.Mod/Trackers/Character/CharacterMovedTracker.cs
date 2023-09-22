@@ -50,7 +50,7 @@ public class CharacterMovedTracker : BaseEventTracker
             return orig(self, amount, procChainMask, nonRegen);
         }
         
-        if (self.body.isPlayerControlled && self.body.characterMotor.isGrounded)
+        if (self.body.isPlayerControlled && !self.body.characterMotor.lastGroundedTime.isInfinity)
         {
             var id = Util.LookUpBodyNetworkUser(self.body).id.steamId.steamValue;
             
@@ -77,8 +77,8 @@ public class CharacterMovedTracker : BaseEventTracker
                 return;
 
             _charactersLastPos[player] = currentPos;
-
-            var eventMetadata = EventMetaDataUtil.CreateEvent
+            
+            CreateEventMetaData
             (
                 EventType.CharacterMoved,
                 new CharacterMovedEvent
@@ -89,8 +89,6 @@ public class CharacterMovedTracker : BaseEventTracker
                 },
                 player
             );
-            
-            OnEventProcessed(eventMetadata);
         }
     }
 }

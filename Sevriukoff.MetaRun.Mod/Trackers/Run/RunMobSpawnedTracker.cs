@@ -1,5 +1,6 @@
 ﻿using System;
 using On.RoR2;
+using Sevriukoff.MetaRun.Domain.Base;
 using Sevriukoff.MetaRun.Mod.Base;
 using CharacterBody = RoR2.CharacterBody;
 using ProcChainMask = RoR2.ProcChainMask;

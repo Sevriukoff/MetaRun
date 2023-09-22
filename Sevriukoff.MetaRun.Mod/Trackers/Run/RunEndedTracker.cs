@@ -21,8 +21,8 @@ public class RunEndedTracker : BaseEventTracker
     private void OnRunEnd(On.RoR2.Run.orig_OnClientGameOver orig, RoR2.Run self, RunReport runReport)
     {
         orig(self, runReport);
-
-        var eventMetaData = EventMetaDataUtil.CreateEvent
+        
+        CreateEventMetaData
         (
             EventType.RunEnded,
             new RunEndedEvent
@@ -32,7 +32,5 @@ public class RunEndedTracker : BaseEventTracker
                 LunarCoinReward = runReport.gameEnding.lunarCoinReward
             }
         );
-        
-        OnEventProcessed(eventMetaData);
     }
 }

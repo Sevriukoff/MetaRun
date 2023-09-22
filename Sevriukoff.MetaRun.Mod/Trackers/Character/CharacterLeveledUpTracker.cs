@@ -30,7 +30,7 @@ public class CharacterLeveledUpTracker : BaseEventTracker
 
         var playerId = self.master.playerCharacterMasterController.networkUser.id.steamId.steamValue;
 
-        var eventMetadata = EventMetaDataUtil.CreateEvent
+        CreateEventMetaData
         (
             EventType.CharacterLeveledUp,
             new CharacterLeveledUpEvent
@@ -39,7 +39,5 @@ public class CharacterLeveledUpTracker : BaseEventTracker
             },
             playerId
         );
-        
-        OnEventProcessed(eventMetadata);
     }
 }
