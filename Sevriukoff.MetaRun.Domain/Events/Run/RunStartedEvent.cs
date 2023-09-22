@@ -16,4 +16,10 @@ public class RunStartedEvent : IEventData
     public Dictionary<ulong, string> PlayerCharacters { get; set; }
     public string[] Artifacts { get; set; }
     public string[] Dlcs { get; set; }
+    public string GetSummationKey() => "-1";
+
+    public void Add(IEventData other)
+    {
+        return;
+    }
 }

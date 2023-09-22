@@ -18,7 +18,7 @@ using HealthComponent = On.RoR2.HealthComponent;
 
 namespace Sevriukoff.MetaRun.Mod.Trackers.Character;
 
-public class CharacterDamageTracker : BaseEventTracker<CharacterDamageEvent>
+public class CharacterDamageTracker : BaseEventTracker
 {
     private CharacterDamageEvent _damageEvent;
     private EventType _eventType;

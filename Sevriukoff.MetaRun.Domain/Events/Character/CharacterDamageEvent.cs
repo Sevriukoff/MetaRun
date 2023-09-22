@@ -16,4 +16,17 @@ public class CharacterDamageEvent : IEventData
     public bool IsRejected { get; set; }
     public string Inflictor { get; set; }
     public Monster Enemy { get; set; }
+
+    public virtual string GetSummationKey() => ((int) DamageType).ToString() + (int) DotType + Enemy.UnityNetId;
+
+    public void Add(IEventData other)
+    {
+        if (GetSummationKey() != other.GetSummationKey())
+            return;
+
+        if (other is CharacterDamageEvent damageEvent)
+        {
+            Damage = damageEvent.Damage;
+        }
+    }
 }

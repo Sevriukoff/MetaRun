@@ -10,4 +10,7 @@ public class RunStageStartedEvent : IEventData
     public StageType StageType { get; set; }
     public bool IsFinalStage { get; set; }
     public Dictionary<string, int> Interactables { get; set; }
+    
+    public string GetSummationKey() => "-1";
+    public void Add(IEventData other) {}
 }
