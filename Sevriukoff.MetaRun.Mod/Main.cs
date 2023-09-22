@@ -47,7 +47,7 @@ public class Main : BaseUnityPlugin
             _trackerManager.StartTracking();
             
             orig(self);
-        };
+        };  
 
         On.RoR2.Run.BeginGameOver += (orig, self, def) =>
         {
@@ -55,6 +55,80 @@ public class Main : BaseUnityPlugin
             _trackerManager.StopTracking();
             
             orig(self, def);
+        };
+
+        _trackerManager.ConfigureTracker<CharacterDamageTracker>
+        (
+            new TrackerOptions
+            {
+                IsActive = true,
+                LingerMs = 1000,
+                MaxEventSummation = 25
+            }
+        );
+        
+        _trackerManager.ConfigureTracker<CharacterMinionDamageTracker>
+        (
+            new TrackerOptions
+            {
+                IsActive = true,
+                LingerMs = 1000,
+                MaxEventSummation = 25
+            }
+        );
+        
+        _trackerManager.ConfigureTracker<CharacterMovedTracker>
+        (
+            new TrackerOptions
+            {
+                IsActive = false
+            }
+        );
+        
+        _trackerManager.ConfigureTracker<CharacterHealedTracker>
+        (
+            new TrackerOptions
+            {
+                IsActive = true,
+                LingerMs = 3000,
+                MaxEventSummation = 25
+            }
+        );
+
+        _assetBundle = AssetBundle.LoadFromFile("C:\\Users\\Bellatrix\\RiderProjects\\Sevriukoff.MetaRun\\Sevriukoff.MetaRun.Mod\\Unity\\betteruiassets");
+        _modPanelPrefab = _assetBundle.LoadAsset<GameObject>($"Assets/ModPanel.prefab");
+        _modSettingPrefab = _assetBundle.LoadAsset<GameObject>($"Assets/BetterUIWindow.prefab");
+
+        //On.RoR2.UI.MainMenu.BaseMainMenuScreen.Awake += (orig, self) =>
+        //{
+        //    _mainMenu = self.transform;
+        //    var transform = self.transform.Find("SafeZone/GenericMenuButtonPanel");
+        //    var DescriptionGameObject = self.transform.Find("SafeZone/GenericMenuButtonPanel/JuicePanel/DescriptionPanel, Naked/ContentSizeFitter/DescriptionText");
+
+        //    if (transform != null && DescriptionGameObject != null)
+        //    {
+        //        var modPanel = GameObject.Instantiate(_modPanelPrefab, transform);
+        //        var button = modPanel.GetComponentInChildren<HGButton>();
+        //        button.onClick.AddListener(OnClickModButton);
+        //    }
+
+        //    orig(self);
+        //};
+
+        On.RoR2.UI.PauseScreenController.Awake += (orig, self) =>
+        {
+            orig(self);
+
+            var transform = self.transform.Find("SafeZone/GenericMenuButtonPanel");
+            transform = self.mainPanel.transform.Find("SafeZone/GenericMenuButtonPanel");
+            transform = self.rootPanel.transform.Find("SafeZone/GenericMenuButtonPanel");
+
+            GameObject.Instantiate( _modPanelPrefab, self.rootPanel.transform);
+        };
+
+        On.RoR2.UI.PauseScreenController.OpenSettingsMenu += (orig, self) =>
+        {
+            orig(self);
         };
         
         /*_trackerManager.ConfigureTracker<CharacterMovedTracker>
@@ -109,6 +183,6 @@ public class Main : BaseUnityPlugin
     
     private void OnOnEventTracked(EventMetaData eventMetaData)
     {
-        _producer.ProduceAsync(eventMetaData);
+        _producer.Produce(eventMetaData);
     }
 }
