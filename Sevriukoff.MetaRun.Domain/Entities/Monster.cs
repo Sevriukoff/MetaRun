@@ -18,4 +18,16 @@ public class Monster
         IsBoss = isBoss;
         Team = team;
     }
+
+    public static bool operator ==(Monster first, Monster second)
+    {
+        return first != null &&
+               second != null &&
+               first.UnityNetId == second.UnityNetId;
+    }
+
+    public static bool operator !=(Monster first, Monster second)
+    {
+        return !(first == second);
+    }
 }
