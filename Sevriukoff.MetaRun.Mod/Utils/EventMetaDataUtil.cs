@@ -61,17 +61,22 @@ public static class EventMetaDataUtil
     public static EventMetaData CreateEvent(EventType eventType, IEventData eventData, ulong playerId) =>
         CreateEventInternal(eventType, eventData,0, playerId);
 
-    private static EventMetaData CreateEventInternal(EventType eventType, IEventData eventData, uint characterMasterId,
+    private static EventMetaData CreateEventInternal(EventType eventType, IEventData eventData, uint characterMasterNetId,
         ulong playerId)
     {
-        _cachedPlayersId.TryGetValue(characterMasterId, out var cachedPlayerId);
+        ulong pId;
+        
+        if (characterMasterNetId > 0)
+            _cachedPlayersId.TryGetValue(characterMasterNetId, out pId);
+        else
+            pId = playerId;
         
         return new EventMetaData
         (
             eventType,
             TimeSpan.FromSeconds(_run.GetRunStopwatch()),
             _cachedRunId,
-            cachedPlayerId == 0 ? playerId : cachedPlayerId
+            pId == 0 ? _cachedPlayerHostId : pId
         )
         {
             Data = eventData

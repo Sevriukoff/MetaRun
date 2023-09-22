@@ -4,6 +4,7 @@ using Confluent.Kafka;
 using Newtonsoft.Json;
 using Sevriukoff.MetaRun.Domain;
 using Sevriukoff.MetaRun.Domain.Base;
+using Sevriukoff.MetaRun.Mod.Utils;
 
 namespace Sevriukoff.MetaRun.Mod;
 
