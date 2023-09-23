@@ -1,21 +1,30 @@
 ﻿using System;
 using System.Threading.Tasks;
 using BepInEx;
+using BepInEx.Configuration;
 using Confluent.Kafka;
 using R2API;
 using R2API.Utils;
+using RiskOfOptions;
+using RiskOfOptions.Options;
 using RoR2;
+using RoR2.UI;
 using Sevriukoff.MetaRun.Domain;
 using Sevriukoff.MetaRun.Domain.Base;
+using Sevriukoff.MetaRun.Domain.Events.Character;
 using Sevriukoff.MetaRun.Mod.Base;
 using Sevriukoff.MetaRun.Mod.Trackers.Character;
 using Sevriukoff.MetaRun.Mod.Utils;
+using UnityEngine;
+using UnityEngine.UI;
+using Vector3 = UnityEngine.Vector3;
 
 namespace Sevriukoff.MetaRun.Mod;
 
 [BepInDependency(ItemAPI.PluginGUID)]
 [BepInDependency(R2API.R2API.PluginGUID)]
 [BepInDependency(LanguageAPI.PluginGUID)]
+[BepInDependency("com.rune580.riskofoptions")]
 
 [NetworkCompatibility(CompatibilityLevel.NoNeedForSync, VersionStrictness.DifferentModVersionsAreOk)]
 
@@ -26,11 +35,12 @@ public class Main : BaseUnityPlugin
     public const string PluginGuid = PluginAuthor + "." + PluginName;
     public const string PluginAuthor = "HookAjor";
     public const string PluginName = "MetaRun";
-    public const string PluginVersion = "0.1.0";
+    public const string PluginVersion = "0.2.0";
 
     private TrackerManager _trackerManager;
     private IProducer _producer;
-    
+    private AssetBundle _assetBundle;
+
     public void Awake()
     {
         string librdkafka =
@@ -47,7 +57,7 @@ public class Main : BaseUnityPlugin
             _trackerManager.StartTracking();
             
             orig(self);
-        };  
+        };
 
         On.RoR2.Run.BeginGameOver += (orig, self, def) =>
         {
@@ -94,66 +104,20 @@ public class Main : BaseUnityPlugin
                 MaxEventSummation = 25
             }
         );
-
-        _assetBundle = AssetBundle.LoadFromFile("C:\\Users\\Bellatrix\\RiderProjects\\Sevriukoff.MetaRun\\Sevriukoff.MetaRun.Mod\\Unity\\betteruiassets");
-        _modPanelPrefab = _assetBundle.LoadAsset<GameObject>($"Assets/ModPanel.prefab");
-        _modSettingPrefab = _assetBundle.LoadAsset<GameObject>($"Assets/BetterUIWindow.prefab");
-
-        //On.RoR2.UI.MainMenu.BaseMainMenuScreen.Awake += (orig, self) =>
-        //{
-        //    _mainMenu = self.transform;
-        //    var transform = self.transform.Find("SafeZone/GenericMenuButtonPanel");
-        //    var DescriptionGameObject = self.transform.Find("SafeZone/GenericMenuButtonPanel/JuicePanel/DescriptionPanel, Naked/ContentSizeFitter/DescriptionText");
-
-        //    if (transform != null && DescriptionGameObject != null)
-        //    {
-        //        var modPanel = GameObject.Instantiate(_modPanelPrefab, transform);
-        //        var button = modPanel.GetComponentInChildren<HGButton>();
-        //        button.onClick.AddListener(OnClickModButton);
-        //    }
-
-        //    orig(self);
-        //};
-
-        On.RoR2.UI.PauseScreenController.Awake += (orig, self) =>
-        {
-            orig(self);
-
-            var transform = self.transform.Find("SafeZone/GenericMenuButtonPanel");
-            transform = self.mainPanel.transform.Find("SafeZone/GenericMenuButtonPanel");
-            transform = self.rootPanel.transform.Find("SafeZone/GenericMenuButtonPanel");
-
-            GameObject.Instantiate( _modPanelPrefab, self.rootPanel.transform);
-        };
-
-        On.RoR2.UI.PauseScreenController.OpenSettingsMenu += (orig, self) =>
-        {
-            orig(self);
-        };
         
-        /*_trackerManager.ConfigureTracker<CharacterMovedTracker>
+        _assetBundle = AssetBundle.LoadFromFile("C:\\Users\\Bellatrix\\Documents\\UnityProjects\\MetaRunUI\\ThunderKit\\Staging\\Unknown\\plugins\\Unknown\\metarunui.test");
+
+        var cfg = new ConfigFile(Paths.ConfigPath + "\\MetaRun.cfg", true);
+        var enableTracking = cfg.Bind
         (
-            new TrackerOptions
-            {
-                IsActive = false,
-            }
+            "CharacterDamageTracker",
+            "Enable tracking damage",
+            true,
+            "If true the tracker will track the damage of the character"
         );
 
-        _trackerManager.ConfigureTracker<CharacterMinionDamageTracker>
-        (
-            new TrackerOptions
-            {
-                IsActive = false,
-            }
-        );
-
-        _trackerManager.ConfigureTracker<CharacterHealedTracker>
-       (
-           new TrackerOptions
-           {
-               IsActive = false,
-           }
-       );*/
+        ModSettingsManager.AddOption(new CheckBoxOption(enableTracking));
+        ModSettingsManager.SetModIcon(_assetBundle.LoadAsset<Sprite>("Assets/MetaRunUIIcon.png"));
 
         var networkUsers = NetworkUser.instancesList;
 
@@ -180,7 +144,7 @@ public class Main : BaseUnityPlugin
     {
         
     }
-    
+
     private void OnOnEventTracked(EventMetaData eventMetaData)
     {
         _producer.Produce(eventMetaData);
