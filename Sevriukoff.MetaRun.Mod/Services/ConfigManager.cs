@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using BepInEx;
@@ -6,13 +7,14 @@ using BepInEx.Configuration;
 using RiskOfOptions;
 using RiskOfOptions.OptionConfigs;
 using RiskOfOptions.Options;
-using UnityEngine;
+using Sevriukoff.MetaRun.Mod.Base;
 
-namespace Sevriukoff.MetaRun.Mod.Base;
+namespace Sevriukoff.MetaRun.Mod.Services;
 
 public class ConfigManager
 {
-    public readonly ConfigFile Config;
+    private readonly ConfigFile _config;
+    private readonly Dictionary<Type, TrackerOptions> _trackerOptions;
 
     public ConfigManager(AssetManager assetManager)
     {
@@ -20,8 +22,10 @@ public class ConfigManager
             .GetTypes()
             .Where(x => x.IsSubclassOf(typeof(BaseEventTracker)))
             .ToArray();
+
+        _trackerOptions = new Dictionary<Type, TrackerOptions>(types.Length);
         
-        Config = new ConfigFile(Paths.ConfigPath + "\\HookAjor-MetaRun.cfg", true);
+        _config = new ConfigFile(Paths.ConfigPath + "\\HookAjor-MetaRun.cfg", true);
         
         ModSettingsManager.SetModDescription("MetaRun представляет расширенную статистику о забеге в режиме реального времени." +
                                              " Статистика поможет понять кто из твоих друзей больше ворует шмот и пылесосит всю карту." +
@@ -31,7 +35,9 @@ public class ConfigManager
 
         foreach (var trackerType in types)
         {
-            var isEnable =  Config.Bind
+            var trackerOption = new TrackerOptions();
+            
+            var isEnable =  _config.Bind
             (
                 trackerType.Name,
                 "Включить отслеживание",
@@ -41,10 +47,11 @@ public class ConfigManager
                     tags: trackerType)
             );
             ModSettingsManager.AddOption(new CheckBoxOption(isEnable));
+            trackerOption.Bind(nameof(trackerOption.IsActive), isEnable);
 
             if (!trackerType.Name.StartsWith("Run"))
             {
-                var trackOnlyHost = Config.Bind
+                var trackOnlyHost = _config.Bind
                 (
                     trackerType.Name,
                     "Отслеживать только хоста",
@@ -54,9 +61,10 @@ public class ConfigManager
                         tags: trackerType)
                 );
                 ModSettingsManager.AddOption(new CheckBoxOption(trackOnlyHost));
+                trackerOption.Bind(nameof(trackerOption.TrackOnlyHost), trackOnlyHost);
             }
 
-            var maxEventSummation = Config.Bind
+            var maxEventSummation = _config.Bind
             (
                 trackerType.Name,
                 "Кол-во событий для суммирования",
@@ -66,8 +74,9 @@ public class ConfigManager
                     tags: trackerType)
             );
             ModSettingsManager.AddOption(new StepSliderOption(maxEventSummation, new StepSliderConfig{min = 0, max = 255, increment = 5f}));
+            trackerOption.Bind(nameof(trackerOption.MaxEventSummation), maxEventSummation);
             
-            var lingerMs = Config.Bind
+            var lingerMs = _config.Bind
             (
                 trackerType.Name,
                 "Время хранения сообщений в мс",
@@ -77,6 +86,19 @@ public class ConfigManager
                     tags: trackerType)
             );
             ModSettingsManager.AddOption(new StepSliderOption(lingerMs, new StepSliderConfig{min = 0, max = 60000, increment = 100f}));
+            trackerOption.Bind(nameof(trackerOption.LingerMs), lingerMs);
+            
+            _trackerOptions.Add(trackerType, trackerOption);
         }
+    }
+
+    public TrackerOptions GetTrackerOptionByType<T>()
+    {
+        return _trackerOptions[typeof(T)];
+    }
+
+    public TrackerOptions GetTrackerOptionByType(Type type)
+    {
+        return _trackerOptions[type];
     }
 }

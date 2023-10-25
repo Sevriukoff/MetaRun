@@ -65,7 +65,7 @@ public class CharacterMovedTracker : BaseEventTracker
     {
         foreach (var (player, currentTransform) in _charactersTransform)
         {
-            var currentPos = currentTransform.position;
+            var currentPos = currentTransform.position; // TODO: FIX after first stage appears the NullReferenceException
             
             if (!_charactersLastPos.ContainsKey(player))
                 _charactersLastPos.Add(player, currentPos);

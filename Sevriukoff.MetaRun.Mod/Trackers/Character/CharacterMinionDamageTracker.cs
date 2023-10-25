@@ -44,7 +44,7 @@ public class CharacterMinionDamageTracker : BaseEventTracker
             return;
 
         var attackerCharacterBody = attacker.GetComponent<CharacterBody>();
-        var playerCharacterMaster = attackerCharacterBody.master.minionOwnership.ownerMaster;
+        var playerCharacterMaster = attackerCharacterBody.master.minionOwnership.ownerMaster; // TODO: FIX NullReferenceException.
         var enemyCharacterBody = self.body;
         _eventType = EventType.CharacterMinionDealtDamage;
 

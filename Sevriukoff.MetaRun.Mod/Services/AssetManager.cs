@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using UnityEngine;
 
-namespace Sevriukoff.MetaRun.Mod.Base;
+namespace Sevriukoff.MetaRun.Mod.Services;
 
 public class AssetManager
 {
