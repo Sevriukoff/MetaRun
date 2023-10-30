@@ -56,6 +56,14 @@ public class Main : BaseUnityPlugin
         _producer = new KafkaProducer("localhost:9092");
         EventMetaDataUtil.Init();
 
+        if (!_configManager.TryGetOption("Misc.IsFirstStart", out var opt))
+        {
+            opt = new Option<bool>("Misc", "IsFirstStart", true){Description = ""};
+            _configManager.Configure<bool>(opt, false);
+            
+            //_producer.Produce();
+        }
+        
         On.RoR2.Run.Start += (orig, self) =>
         {
             var modName = Language.GetString("METARUN_TITLE");

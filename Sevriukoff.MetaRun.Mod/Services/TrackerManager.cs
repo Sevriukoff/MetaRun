@@ -43,7 +43,27 @@ public class TrackerManager
 
         foreach (var type in types)
         {
-            var trackerOption = configManager.GetTrackerOptionByType(type);
+            var trackerOption = new TrackerOptions
+            (
+                new BindableOption<bool>(type.Name, "IsActive", true)
+                {
+                    Description = $"Можно выключить отслеживание событий типа: [{type.Name.Remove(type.Name.Length - 7)}]"
+                },
+                new BindableOption<float>(type.Name, "MaxEventSummation", 0f)
+                {
+                    Description = "Сколько событий могут быть объедены в одно за время хранения сообщений в буфере перед отправкой на сервер. Позволяет снизить нагрузку при большом количестве собыйтий в секунду. Особенно полезно для трекера передвижения"
+                },
+                new BindableOption<float>(type.Name, "LingerMs", 0f)
+                {
+                    Description = "Сколько милисекунд будут храниться события во внутреннем буфере трекера перед отправкой на сервер. Отдельно это параметр практически не имеет значения. Рекомендуется использовать вместе с параметром \"Кол-во событий для суммирования\""
+                }
+            );
+            
+            configManager.Configure<bool>(trackerOption.IsActive);
+            configManager.Configure<float>(trackerOption.MaxEventSummation);
+            configManager.Configure<float>(trackerOption.LingerMs);
+            configManager.Configure(trackerOption.TrackOnlyHost);
+            
             _trackersOptions.Add(type, trackerOption);
             _lastTimeBufferClear.Add(type, dateTimeNow);
             _trackerEventByTrackerType.Add(type, new List<EventMetaData>());
@@ -125,7 +145,7 @@ public class TrackerManager
 
         if (trackerOption.MaxEventSummation.Value <= 0)
         {
-            OnEventTrackedInternal(trackedEvent);
+            OnEventTracked?.Invoke(trackedEvent);
             return;
         }
         
@@ -140,7 +160,7 @@ public class TrackerManager
             
             if (storedEvent.CountSummations >= trackerOption.MaxEventSummation.Value)
             {
-                OnEventTrackedInternal(storedEvent);
+                OnEventTracked?.Invoke(storedEvent);
                 
                 _trackerEventBySummationKey.Remove(eventKey);
                 _trackerEventByTrackerType[trackerType].Remove(storedEvent);
@@ -158,7 +178,7 @@ public class TrackerManager
             
             listEventsToSend.ForEach(x =>
             {
-                OnEventTrackedInternal(x);
+                OnEventTracked?.Invoke(x);
                 
                 _trackerEventBySummationKey.Remove(x.GetSummationKey());
             });
@@ -166,14 +186,6 @@ public class TrackerManager
             listEventsToSend.Clear();
             
             _lastTimeBufferClear[trackerType] = DateTime.Now;
-        }
-
-        void OnEventTrackedInternal(EventMetaData eventMetaData)
-        {
-            if (trackerOption.OnEventTracked != null)
-                trackerOption.OnEventTracked(eventMetaData);
-            else
-                OnEventTracked?.Invoke(eventMetaData);
         }
     }
 }

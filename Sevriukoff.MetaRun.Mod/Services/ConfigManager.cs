@@ -14,7 +14,7 @@ namespace Sevriukoff.MetaRun.Mod.Services;
 public class ConfigManager
 {
     private readonly ConfigFile _config;
-    private readonly Dictionary<Type, TrackerOptions> _trackerOptions;
+    private readonly Dictionary<string, OptionBase> _options;
 
     public ConfigManager(AssetManager assetManager)
     {
@@ -23,7 +23,7 @@ public class ConfigManager
             .Where(x => x.IsSubclassOf(typeof(BaseEventTracker)))
             .ToArray();
 
-        _trackerOptions = new Dictionary<Type, TrackerOptions>(types.Length);
+        _options = new Dictionary<string, OptionBase>(capacity: types.Length * 3);
         
         _config = new ConfigFile(Paths.ConfigPath + "\\HookAjor-MetaRun.cfg", true);
         
@@ -32,73 +32,66 @@ public class ConfigManager
                                              " Если без шуток, то MetaRun поможет понять на каком этапе у тебя просел урон или какого типа урона тебе не хватает," +
                                              " какой объём у тебя хила, насколько тщательно ты исследуешь этапы и многое другое.");
         ModSettingsManager.SetModIcon(assetManager.ModIcon);
+    }
 
-        foreach (var trackerType in types)
+    public void Configure<T>(Option<T> option)
+    {
+        Configure<T>(option, true);
+    }
+
+    public void Configure<T>(OptionBase option, bool renderUi = true)
+    {
+        if (option == null)
+            return;
+        
+        var configEntry = _config.Bind
+        (
+            option.Section,
+            option.Key,
+            (T)option.DefaultValue,
+            new ConfigDescription(option.Description)
+        );
+
+        if (option is IBindableOption<T> opt)
+            opt.Bind(configEntry);
+        
+        _options.Add($"{option.Section}.{option.Key}", option);
+
+        if (!renderUi)
+            return;
+        
+        switch (configEntry)
         {
-            var trackerOption = new TrackerOptions();
-            
-            var isEnable =  _config.Bind
-            (
-                trackerType.Name,
-                "Включить отслеживание",
-                true,
-                new ConfigDescription(
-                    $"Можно выключить отслеживание событий типа: [{trackerType.Name.Remove(trackerType.Name.Length - 7)}]",
-                    tags: trackerType)
-            );
-            ModSettingsManager.AddOption(new CheckBoxOption(isEnable));
-            trackerOption.Bind(nameof(trackerOption.IsActive), isEnable);
-
-            if (!trackerType.Name.StartsWith("Run"))
-            {
-                var trackOnlyHost = _config.Bind
-                (
-                    trackerType.Name,
-                    "Отслеживать только хоста",
-                    false,
-                    new ConfigDescription(
-                        "При включении опции трекер будет отслеживать только хоста. Может помочь снизить нагрузку при полном лобби",
-                        tags: trackerType)
-                );
-                ModSettingsManager.AddOption(new CheckBoxOption(trackOnlyHost));
-                trackerOption.Bind(nameof(trackerOption.TrackOnlyHost), trackOnlyHost);
-            }
-
-            var maxEventSummation = _config.Bind
-            (
-                trackerType.Name,
-                "Кол-во событий для суммирования",
-                0f,
-                new ConfigDescription(
-                    "Сколько событий могут быть объедены в одно за время хранения сообщений в буфере перед отправкой на сервер. Позволяет снизить нагрузку при большом количестве собыйтий в секунду. Особенно полезно для трекера передвижения",
-                    tags: trackerType)
-            );
-            ModSettingsManager.AddOption(new StepSliderOption(maxEventSummation, new StepSliderConfig{min = 0, max = 255, increment = 5f}));
-            trackerOption.Bind(nameof(trackerOption.MaxEventSummation), maxEventSummation);
-            
-            var lingerMs = _config.Bind
-            (
-                trackerType.Name,
-                "Время хранения сообщений в мс",
-                0f,
-                new ConfigDescription(
-                    "Сколько милисекунд будут храниться события во внутреннем буфере трекера перед отправкой на сервер. Отдельно это параметр практически не имеет значения. Рекомендуется использовать вместе с параметром \"Кол-во событий для суммирования\"",
-                    tags: trackerType)
-            );
-            ModSettingsManager.AddOption(new StepSliderOption(lingerMs, new StepSliderConfig{min = 0, max = 60000, increment = 100f}));
-            trackerOption.Bind(nameof(trackerOption.LingerMs), lingerMs);
-            
-            _trackerOptions.Add(trackerType, trackerOption);
+            case ConfigEntry<bool> configEntryBool:
+                ModSettingsManager.AddOption(new CheckBoxOption(configEntryBool));
+                break;
+            case ConfigEntry<float> configEntryFloat:
+                ModSettingsManager.AddOption(new StepSliderOption(configEntryFloat));
+                break;
         }
     }
 
-    public TrackerOptions GetTrackerOptionByType<T>()
+    public void ConfigureGroup(IOptionGroup optionGroup)
     {
-        return _trackerOptions[typeof(T)];
+        foreach (var optionBase in optionGroup.GetOption())
+        {
+            //Configure<object>(optionBase);
+        }
     }
 
-    public TrackerOptions GetTrackerOptionByType(Type type)
+    public OptionBase GetOption(string optionPath) => _options[optionPath];
+
+    public bool TryGetOption(string optionPath, out OptionBase value)
     {
-        return _trackerOptions[type];
+        value = null;
+        
+        try
+        {
+            return _options.TryGetValue(optionPath, out value);
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
     }
 }
