@@ -115,7 +115,11 @@ public enum EventType
     /// </summary>
     RunEnded = 250,
     
+    RunPlayerConnected = 260,
+    RunPlayerDisconnected = 261,
+    
     //------------------Mob--------------------//
     MobSpawned = 300,
-    MobDamageMob = 310
+    MobDamageMob = 310,
+    MobInfestation = 320
 }
