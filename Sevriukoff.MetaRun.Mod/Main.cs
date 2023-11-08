@@ -59,7 +59,7 @@ public class Main : BaseUnityPlugin
         if (!_configManager.TryGetOption("Misc.IsFirstStart", out var opt))
         {
             opt = new Option<bool>("Misc", "IsFirstStart", true){Description = ""};
-            _configManager.Configure<bool>(opt, false);
+            _configManager.Configure<bool>(opt, renderUi:false);
             
             //_producer.Produce();
         }

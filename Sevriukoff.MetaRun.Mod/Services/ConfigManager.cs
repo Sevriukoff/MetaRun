@@ -8,6 +8,7 @@ using RiskOfOptions;
 using RiskOfOptions.OptionConfigs;
 using RiskOfOptions.Options;
 using Sevriukoff.MetaRun.Mod.Base;
+using Sevriukoff.MetaRun.Mod.Base.Interfaces;
 
 namespace Sevriukoff.MetaRun.Mod.Services;
 
@@ -34,12 +35,17 @@ public class ConfigManager
         ModSettingsManager.SetModIcon(assetManager.ModIcon);
     }
 
-    public void Configure<T>(Option<T> option)
+    public void Configure<T>(Option<T> option, BaseOptionConfig optConfig = null, bool renderUi = true)
     {
-        Configure<T>(option, true);
+        ConfigureInternal<T>(option, optConfig, renderUi);
+    }
+    
+    public void Configure<T>(OptionBase option, BaseOptionConfig optConfig = null, bool renderUi = true)
+    {
+        ConfigureInternal<T>(option, optConfig, renderUi);
     }
 
-    public void Configure<T>(OptionBase option, bool renderUi = true)
+    private void ConfigureInternal<T>(OptionBase option, BaseOptionConfig optConfig = null, bool renderUi = true)
     {
         if (option == null)
             return;
@@ -55,27 +61,35 @@ public class ConfigManager
         if (option is IBindableOption<T> opt)
             opt.Bind(configEntry);
         
-        _options.Add($"{option.Section}.{option.Key}", option);
-
+        var key = $"{option.Section}.{option.Key}";
+        
+        if (!_options.ContainsKey(key))
+            _options.Add(key, option);
+        
         if (!renderUi)
             return;
         
         switch (configEntry)
         {
             case ConfigEntry<bool> configEntryBool:
-                ModSettingsManager.AddOption(new CheckBoxOption(configEntryBool));
+                ModSettingsManager.AddOption(new CheckBoxOption(configEntryBool,
+                    optConfig as CheckBoxConfig ?? new CheckBoxConfig()));
                 break;
             case ConfigEntry<float> configEntryFloat:
-                ModSettingsManager.AddOption(new StepSliderOption(configEntryFloat));
+                ModSettingsManager.AddOption(new StepSliderOption(configEntryFloat,
+                    optConfig as StepSliderConfig ?? new StepSliderConfig()));
                 break;
         }
     }
 
-    public void ConfigureGroup(IOptionGroup optionGroup)
+    public void ConfigureGroup(IOptionGroup optionGroup, bool renderUi = true)
     {
-        foreach (var optionBase in optionGroup.GetOption())
+        foreach (var (option, config) in optionGroup.GetOption())
         {
-            //Configure<object>(optionBase);
+            typeof(ConfigManager)
+                .GetMethod(nameof(ConfigureInternal), BindingFlags.NonPublic | BindingFlags.Instance)!
+                .MakeGenericMethod(option.Type)
+                .Invoke(this, new object[] { option, config, renderUi });
         }
     }
 
