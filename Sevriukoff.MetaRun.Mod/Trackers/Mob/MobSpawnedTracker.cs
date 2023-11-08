@@ -1,13 +1,12 @@
 ﻿using System;
 using On.RoR2;
-using Sevriukoff.MetaRun.Domain.Base;
 using Sevriukoff.MetaRun.Mod.Base;
 using CharacterBody = RoR2.CharacterBody;
 using ProcChainMask = RoR2.ProcChainMask;
 
-namespace Sevriukoff.MetaRun.Mod.Trackers.Run;
+namespace Sevriukoff.MetaRun.Mod.Trackers.Mob;
 
-public class RunMobSpawnedTracker : BaseEventTracker
+public class MobSpawnedTracker : BaseEventTracker
 {
     public override void StartProcessing()
     {

@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using R2API.MiscHelpers;
 using RoR2;
@@ -10,6 +10,7 @@ using Sevriukoff.MetaRun.Domain.Enum;
 using Sevriukoff.MetaRun.Domain.Events;
 using Sevriukoff.MetaRun.Domain.Events.Character;
 using Sevriukoff.MetaRun.Mod.Base;
+using Sevriukoff.MetaRun.Mod.Services;
 using Sevriukoff.MetaRun.Mod.Utils;
 using CharacterBody = RoR2.CharacterBody;
 using DamageInfo = RoR2.DamageInfo;
@@ -18,11 +19,21 @@ using HealthComponent = On.RoR2.HealthComponent;
 
 namespace Sevriukoff.MetaRun.Mod.Trackers.Character;
 
+[DisplayName("Damage")]
 public class CharacterDamageTracker : BaseEventTracker
 {
     private CharacterDamageEvent _damageEvent;
     private EventType _eventType;
     private uint _playerId;
+
+    public CharacterDamageTracker()
+    {
+        SupportedEvent = new Dictionary<EventType, bool>
+        {
+            {EventType.CharacterDealtDamage, true},
+            {EventType.CharacterTookDamage, true}
+        };
+    }
 
     public override void StartProcessing()
     {
@@ -68,6 +79,9 @@ public class CharacterDamageTracker : BaseEventTracker
 
         _eventType = eventType;
         _playerId = playerCharacterBody.master.netId.Value;
+        
+        if (SupportedEvent[_eventType] == false)
+            return;
 
         _damageEvent = new CharacterDamageEvent
         {
@@ -91,4 +105,3 @@ public class CharacterDamageTracker : BaseEventTracker
         CreateEventMetaData(_eventType, _damageEvent, _playerId);
     }
 }
-

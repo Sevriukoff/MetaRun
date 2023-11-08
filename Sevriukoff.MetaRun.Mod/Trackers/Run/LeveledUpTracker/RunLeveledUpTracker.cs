@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Sevriukoff.MetaRun.Domain.Base;
 using Sevriukoff.MetaRun.Domain.Enum;
 using Sevriukoff.MetaRun.Mod.Base;
@@ -8,6 +9,14 @@ namespace Sevriukoff.MetaRun.Mod.Trackers.Run;
 
 public class RunLeveledUpTracker : BaseEventTracker
 {
+    public RunLeveledUpTracker()
+    {
+        SupportedEvent = new Dictionary<EventType, bool>
+        {
+            {EventType.RunLeveledUp, true}
+        };
+    }
+    
     public override void StartProcessing()
     {
         On.RoR2.Run.OnAmbientLevelUp += AmbientLevelUp;

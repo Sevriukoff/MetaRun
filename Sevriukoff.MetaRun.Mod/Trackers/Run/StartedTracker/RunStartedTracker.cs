@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
+using RoR2;
+using RoR2.ExpansionManagement;
+using RoR2.UI;
 using Sevriukoff.MetaRun.Domain.Base;
 using Sevriukoff.MetaRun.Domain.Enum;
 using Sevriukoff.MetaRun.Domain.Events;
@@ -14,6 +18,14 @@ namespace Sevriukoff.MetaRun.Mod.Trackers.Run;
 
 public class RunStartedTracker : BaseEventTracker
 {
+    public RunStartedTracker()
+    {
+        SupportedEvent = new Dictionary<EventType, bool>
+        {
+            {EventType.RunStarted, true}
+        };
+    }
+    
     public override void StartProcessing()
     {
         HealthComponent.Heal += InitializationCharacters; 
@@ -34,9 +46,9 @@ public class RunStartedTracker : BaseEventTracker
         
         var playerCharacters =
             run.userMasters.ToDictionary(x => x.Key.steamId.steamValue,
-                y => y.Value.GetBody().name);
+                y => Regex.Replace(y.Value.GetBody().name, ".{11}$", ""));
         
-        var serverName = RoR2.NetworkSession.instance.NetworkserverName;
+        var serverName = NetworkSession.instance.NetworkserverName;
         var artifacts = new List<string>(4);
         var dlcs = new List<string>(1);
         
@@ -46,12 +58,17 @@ public class RunStartedTracker : BaseEventTracker
         
             if (str.Length != 3)
                 continue;
+
+            (string category, string item, string action) = (str[0], str[1], str[2]);
+
+            if (string.IsNullOrEmpty(item))
+                continue;
         
-            if (str[0] == "artifacts" && str[2] == "on")
-                artifacts.Add(str[1]);
+            if (category == "artifacts" && action == "on")
+                artifacts.Add(item);
         
-            if (str[0] == "expansions" && str[2] == "on")
-                dlcs.Add(str[1]);
+            if (category == "expansions" && action == "on")
+                dlcs.Add(item);
         }
 
         CreateEventMetaData

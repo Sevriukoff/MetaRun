@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Sevriukoff.MetaRun.Domain.Base;
 using Sevriukoff.MetaRun.Domain.Enum;
 using Sevriukoff.MetaRun.Mod.Base;
@@ -9,6 +10,15 @@ namespace Sevriukoff.MetaRun.Mod.Trackers.Run;
 public class RunPausedTracker : BaseEventTracker
 {
     private bool _isRunPaused;
+
+    public RunPausedTracker()
+    {
+        SupportedEvent = new Dictionary<EventType, bool>
+        {
+            {EventType.RunPaused, true},
+            {EventType.RunTimePaused, false}
+        };
+    }
     
     public override void StartProcessing()
     {

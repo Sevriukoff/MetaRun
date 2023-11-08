@@ -1,4 +1,5 @@
-﻿using RoR2;
+﻿using System.Collections.Generic;
+using RoR2;
 using Sevriukoff.MetaRun.Domain.Enum;
 using Sevriukoff.MetaRun.Domain.Events.Run;
 using Sevriukoff.MetaRun.Mod.Base;
@@ -8,6 +9,14 @@ namespace Sevriukoff.MetaRun.Mod.Trackers.Run;
 
 public class RunEndedTracker : BaseEventTracker
 {
+    public RunEndedTracker()
+    {
+        SupportedEvent = new Dictionary<EventType, bool>
+        {
+            {EventType.RunEnded, true}
+        };
+    }
+    
     public override void StartProcessing()
     {
         On.RoR2.Run.OnClientGameOver += OnRunEnd;

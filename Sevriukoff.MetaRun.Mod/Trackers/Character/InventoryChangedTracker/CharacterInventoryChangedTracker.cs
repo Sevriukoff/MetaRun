@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using RoR2;
 using Sevriukoff.MetaRun.Domain.Base;
 using Sevriukoff.MetaRun.Domain.Enum;
@@ -13,6 +14,15 @@ namespace Sevriukoff.MetaRun.Mod.Trackers.Character;
 
 public class CharacterInventoryChangedTracker : BaseEventTracker
 {
+    public CharacterInventoryChangedTracker()
+    {
+        SupportedEvent = new Dictionary<EventType, bool>
+        {
+            {EventType.CharacterInventoryItemAdded, true},
+            {EventType.CharacterInventoryItemRemoved, true}
+        };
+    }
+    
     public override void StartProcessing()
     {
         CharacterMaster.OnItemAddedClient += OnItemAdded;
@@ -71,5 +81,26 @@ public class CharacterInventoryChangedTracker : BaseEventTracker
             },
             playerId
         );
+    }
+
+    public override void ChangeSupportedEvent(EventType eventType, bool value)
+    {
+        base.ChangeSupportedEvent(eventType, value);
+
+        switch (eventType)
+        {
+            case EventType.CharacterInventoryItemAdded when value:
+                CharacterMaster.OnItemAddedClient += OnItemAdded;
+                break;
+            case EventType.CharacterInventoryItemAdded:
+                CharacterMaster.OnItemAddedClient -= OnItemAdded;
+                break;
+            case EventType.CharacterInventoryItemRemoved when value:
+                Inventory.RemoveItem_ItemDef_int += OnRemoveItem;
+                break;
+            case EventType.CharacterInventoryItemRemoved:
+                Inventory.RemoveItem_ItemDef_int -= OnRemoveItem;
+                break;
+        }
     }
 }

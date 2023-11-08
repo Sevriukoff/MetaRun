@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using On.RoR2;
 using Sevriukoff.MetaRun.Domain.Base;
 using Sevriukoff.MetaRun.Domain.Enum;
@@ -12,6 +13,14 @@ namespace Sevriukoff.MetaRun.Mod.Trackers.Character;
 
 public class CharacterHealedTracker : BaseEventTracker
 {
+    public CharacterHealedTracker()
+    {
+        SupportedEvent = new Dictionary<EventType, bool>()
+        {
+            {EventType.CharacterHealed, true}
+        };
+    }
+    
     public override void StartProcessing()
     {
         HealthComponent.Heal += HealthComponentOnHeal;

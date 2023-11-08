@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using On.RoR2;
 using Sevriukoff.MetaRun.Domain;
 using Sevriukoff.MetaRun.Domain.Base;
@@ -22,6 +23,15 @@ public class CharacterMinionDamageTracker : BaseEventTracker
     private CharacterMinionDamageEvent _damageEvent;
     private EventType _eventType;
     private ulong _playerId;
+
+    public CharacterMinionDamageTracker()
+    {
+        SupportedEvent = new Dictionary<EventType, bool>
+        {
+            {EventType.CharacterMinionDealtDamage, true},
+            {EventType.CharacterMinionTookDamage, true}
+        };
+    }
     
     public override void StartProcessing()
     {

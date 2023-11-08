@@ -21,6 +21,15 @@ public class CharacterMovedTracker : BaseEventTracker
     private Dictionary<ulong, Transform> _charactersTransform;
 
     private int _totalCharacterRun = 0;
+
+    public CharacterMovedTracker()
+    {
+        SupportedEvent = new Dictionary<EventType, bool>()
+        {
+            {EventType.CharacterMoved, true}
+        };
+    }
+    
     public override void StartProcessing()
     {
         _charactersTransform = new Dictionary<ulong, Transform>(4);

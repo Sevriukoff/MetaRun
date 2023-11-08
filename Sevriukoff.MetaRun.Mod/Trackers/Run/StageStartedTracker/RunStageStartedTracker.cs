@@ -19,6 +19,14 @@ public class RunStageStartedTracker : BaseEventTracker
 {
     private Dictionary<string, int> _interactables;
 
+    public RunStageStartedTracker()
+    {
+        SupportedEvent = new Dictionary<EventType, bool>
+        {
+            {EventType.RunStageStarted, true}
+        };
+    }
+
     public override void StartProcessing()
     {
         _interactables = new();
