@@ -5,6 +5,7 @@ using System.Reflection;
 using R2API.MiscHelpers;
 using Sevriukoff.MetaRun.Domain.Base;
 using Sevriukoff.MetaRun.Mod.Base;
+using Sevriukoff.MetaRun.Mod.Base.Interfaces;
 
 namespace Sevriukoff.MetaRun.Mod.Services;
 
@@ -16,7 +17,7 @@ public class TrackerManager
 {
     private bool _isTrackersWorking;
     private readonly List<BaseEventTracker> _activeTrackers;
-    private readonly Dictionary<Type, TrackerOptions> _trackersOptions;
+    private readonly Dictionary<Type, BaseTrackerOptions> _trackersOptions;
     private readonly Dictionary<string, EventMetaData> _trackerEventBySummationKey;
     private readonly Dictionary<Type, List<EventMetaData>> _trackerEventByTrackerType;
     private readonly Dictionary<Type, DateTime> _lastTimeBufferClear;
@@ -27,54 +28,39 @@ public class TrackerManager
 
     public TrackerManager(ConfigManager configManager)
     {
-        Type[] types = Assembly.GetExecutingAssembly()
+        Type[] trackerTypes = Assembly.GetExecutingAssembly()
             .GetTypes()
             .Where(x => x.IsSubclassOf(typeof(BaseEventTracker)))
             .ToArray();
 
         _configManager = configManager;
         
-        _activeTrackers = new List<BaseEventTracker>(types.Length);
-        _trackersOptions = new Dictionary<Type, TrackerOptions>(types.Length);
-        _lastTimeBufferClear = new Dictionary<Type, DateTime>(types.Length);
-        _trackerEventByTrackerType = new Dictionary<Type, List<EventMetaData>>(types.Length);
+        _activeTrackers = new List<BaseEventTracker>(trackerTypes.Length);
+        _trackersOptions = new Dictionary<Type, BaseTrackerOptions>(trackerTypes.Length);
+        _lastTimeBufferClear = new Dictionary<Type, DateTime>(trackerTypes.Length);
+        _trackerEventByTrackerType = new Dictionary<Type, List<EventMetaData>>(trackerTypes.Length);
 
         var dateTimeNow = DateTime.Now;
 
-        foreach (var type in types)
+        foreach (var type in trackerTypes)
         {
-            var trackerOption = new TrackerOptions
-            (
-                new BindableOption<bool>(type.Name, "IsActive", true)
-                {
-                    Description = $"Можно выключить отслеживание событий типа: [{type.Name.Remove(type.Name.Length - 7)}]"
-                },
-                new BindableOption<float>(type.Name, "MaxEventSummation", 0f)
-                {
-                    Description = "Сколько событий могут быть объедены в одно за время хранения сообщений в буфере перед отправкой на сервер. Позволяет снизить нагрузку при большом количестве собыйтий в секунду. Особенно полезно для трекера передвижения"
-                },
-                new BindableOption<float>(type.Name, "LingerMs", 0f)
-                {
-                    Description = "Сколько милисекунд будут храниться события во внутреннем буфере трекера перед отправкой на сервер. Отдельно это параметр практически не имеет значения. Рекомендуется использовать вместе с параметром \"Кол-во событий для суммирования\""
-                }
-            );
-            
-            configManager.Configure<bool>(trackerOption.IsActive);
-            configManager.Configure<float>(trackerOption.MaxEventSummation);
-            configManager.Configure<float>(trackerOption.LingerMs);
-            configManager.Configure(trackerOption.TrackOnlyHost);
+            var trackerInterfaceOptionType = typeof(IOptionsFor<>).MakeGenericType(type);
+            var trackerOptionType = Assembly.GetExecutingAssembly()
+                .GetTypes()
+                .FirstOrDefault(x => x.IsClass && trackerInterfaceOptionType.IsAssignableFrom(x));
+
+            var trackerOption = trackerOptionType == null
+                ? new BaseTrackerOptions(type)
+                : (BaseTrackerOptions) Activator.CreateInstance(trackerOptionType);
+
+            configManager.ConfigureGroup(trackerOption, !type.Name.Contains("Run"));
             
             _trackersOptions.Add(type, trackerOption);
             _lastTimeBufferClear.Add(type, dateTimeNow);
             _trackerEventByTrackerType.Add(type, new List<EventMetaData>());
-            
-            trackerOption.IsActive.OptionChange += isActive =>
-            {
-                ChangeTrackerStatus(type, isActive);
-            };
         }
 
-        _trackerEventBySummationKey = new Dictionary<string, EventMetaData>(types.Length * 2);
+        _trackerEventBySummationKey = new Dictionary<string, EventMetaData>(trackerTypes.Length * 2);
     }
 
     public void StartTracking()
@@ -83,8 +69,9 @@ public class TrackerManager
         {
             if (!opt.IsActive.Value)
                 continue;
-
+            
             var tracker = CreateTracker(type, opt);
+            _trackersOptions[type].ConfiguredObject = tracker;
             _activeTrackers.Add(tracker);
         }
 
@@ -119,7 +106,7 @@ public class TrackerManager
         }
     }
 
-    private BaseEventTracker CreateTracker(Type type, TrackerOptions opt)
+    private BaseEventTracker CreateTracker(Type type, BaseTrackerOptions opt)
     {
         var tracker = (BaseEventTracker)Activator.CreateInstance(type);
         tracker.StartProcessing();
