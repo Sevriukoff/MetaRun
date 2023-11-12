@@ -25,7 +25,7 @@ public class EventMetaData : ISummationAbleWith<EventMetaData>
         Revision = revision;
     }
 
-    public string GetSummationKey() => PlayerId + "/" + Data?.GetSummationKey();
+    public string GetSummationKey() => PlayerId + "/" + (int)Type + "/" + Data?.GetSummationKey();
 
     public void Add(EventMetaData other)
     {

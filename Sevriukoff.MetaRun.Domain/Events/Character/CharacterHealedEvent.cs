@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using Sevriukoff.MetaRun.Domain.Base;
 
 namespace Sevriukoff.MetaRun.Domain.Events.Character;
@@ -8,11 +9,23 @@ namespace Sevriukoff.MetaRun.Domain.Events.Character;
 /// </summary>
 public class CharacterHealedEvent : IEventData
 {
-    public float HealAmount { get; set; }
-    public bool IsRegen { get; set; }
+    public float HealAmount { get; private set; }
+    public float InitialHealAmount { get; }
+    public bool IsRegen { get; }
     
+    private readonly string _summationKey;
+    
+    public CharacterHealedEvent(float healAmount, bool isRegen)
+    {
+        HealAmount = healAmount;
+        InitialHealAmount = healAmount;
+        IsRegen = isRegen;
+        
+        _summationKey = IsRegen ? "1" : $"0{(int)InitialHealAmount}{DateTime.Now.Millisecond}";
+    }
+
     public string GetSummationKey()
-        => (HealAmount * 100).ToString(CultureInfo.InvariantCulture) + (IsRegen ? "1" : "0");
+        => _summationKey;
 
     public void Add(IEventData other)
     {
@@ -23,22 +36,5 @@ public class CharacterHealedEvent : IEventData
         {
             HealAmount += healedEvent.HealAmount;
         }
-    }
-    
-    public IEventData Sum(IEventData other)
-    {
-        if (GetSummationKey() != other.GetSummationKey())
-            return null;
-
-        if (other is CharacterHealedEvent healedEvent)
-        {
-            return new CharacterHealedEvent
-            {
-                HealAmount = HealAmount + healedEvent.HealAmount,
-                IsRegen = healedEvent.IsRegen
-            };
-        }
-
-        return null;
     }
 }

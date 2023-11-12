@@ -42,11 +42,7 @@ public class CharacterHealedTracker : BaseEventTracker
         CreateEventMetaData
         (
             EventType.CharacterHealed,
-            new CharacterHealedEvent
-            {
-                HealAmount = amount,
-                IsRegen = !nonRegen
-            },
+            new CharacterHealedEvent(amount, nonRegen),
             playerId
         );
 
