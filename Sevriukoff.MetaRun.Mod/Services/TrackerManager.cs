@@ -58,6 +58,8 @@ public class TrackerManager
             _trackersOptions.Add(type, trackerOption);
             _lastTimeBufferClear.Add(type, dateTimeNow);
             _trackerEventByTrackerType.Add(type, new List<EventMetaData>());
+
+            trackerOption.IsActive.OptionChange += value => ChangeTrackerStatus(type, value);
         }
 
         _trackerEventBySummationKey = new Dictionary<string, EventMetaData>(trackerTypes.Length * 2);
