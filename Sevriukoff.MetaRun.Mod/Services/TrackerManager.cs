@@ -127,54 +127,56 @@ public class TrackerManager
 
     private void EventTrackedInternal(EventMetaData trackedEvent, Type trackerType)
     {
-        if (!_trackersOptions.ContainsKey(trackerType))
+        if (!_trackersOptions.TryGetValue(trackerType, out var trackerOption))
             return;
-
-        var trackerOption = _trackersOptions[trackerType];
-
-        if (trackerOption.MaxEventSummation.Value <= 0)
-        {
-            OnEventTracked?.Invoke(trackedEvent);
-            return;
-        }
         
         var dateTimeNow = DateTime.Now;
-
+        var (maxEventSummation, lingerMs) = (trackerOption.MaxEventSummation.Value, trackerOption.LingerMs.Value);
         string eventKey = trackedEvent.GetSummationKey();
 
-        if (_trackerEventBySummationKey.ContainsKey(eventKey))
+        if (maxEventSummation > 0)
         {
-            var storedEvent = _trackerEventBySummationKey[eventKey];
-            storedEvent.Add(trackedEvent);
-            
-            if (storedEvent.CountSummations >= trackerOption.MaxEventSummation.Value)
+            if (_trackerEventBySummationKey.ContainsKey(eventKey))
             {
-                OnEventTracked?.Invoke(storedEvent);
+                var storedEvent = _trackerEventBySummationKey[eventKey];
+                storedEvent.Add(trackedEvent);
+
+                if (storedEvent.CountSummations >= maxEventSummation)
+                {
+                    _trackerEventBySummationKey.Remove(eventKey);
+                    _trackerEventByTrackerType[trackerType].Remove(storedEvent);
                 
-                _trackerEventBySummationKey.Remove(eventKey);
-                _trackerEventByTrackerType[trackerType].Remove(storedEvent);
+                    OnEventTracked?.Invoke(storedEvent);
+                }
+            }
+            else
+            {
+                _trackerEventBySummationKey.Add(eventKey, trackedEvent);
+                _trackerEventByTrackerType[trackerType].Add(trackedEvent);
             }
         }
         else
         {
-            _trackerEventBySummationKey.Add(eventKey, trackedEvent);
             _trackerEventByTrackerType[trackerType].Add(trackedEvent);
         }
 
-        if ((dateTimeNow - _lastTimeBufferClear[trackerType]).TotalMilliseconds > trackerOption.LingerMs.Value)
+        if (lingerMs > 0)
         {
-            var listEventsToSend = _trackerEventByTrackerType[trackerType];
-            
-            listEventsToSend.ForEach(x =>
+            if ((dateTimeNow - _lastTimeBufferClear[trackerType]).TotalMilliseconds > lingerMs)
             {
-                OnEventTracked?.Invoke(x);
+                var listEventsToSend = _trackerEventByTrackerType[trackerType];
+            
+                listEventsToSend.ForEach(x =>
+                {
+                    OnEventTracked?.Invoke(x);
                 
-                _trackerEventBySummationKey.Remove(x.GetSummationKey());
-            });
+                    _trackerEventBySummationKey.Remove(x.GetSummationKey());
+                });
             
-            listEventsToSend.Clear();
+                listEventsToSend.Clear();
             
-            _lastTimeBufferClear[trackerType] = DateTime.Now;
+                _lastTimeBufferClear[trackerType] = DateTime.Now;
+            }
         }
     }
 }

@@ -1,24 +1,12 @@
-﻿ using System;
-using System.Threading.Tasks;
-using BepInEx;
-using BepInEx.Configuration;
+﻿using BepInEx;
 using Confluent.Kafka;
 using R2API;
 using R2API.Utils;
-using RiskOfOptions;
-using RiskOfOptions.Options;
 using RoR2;
-using RoR2.UI;
-using Sevriukoff.MetaRun.Domain;
 using Sevriukoff.MetaRun.Domain.Base;
-using Sevriukoff.MetaRun.Domain.Events.Character;
-using Sevriukoff.MetaRun.Mod.Base;
- using Sevriukoff.MetaRun.Mod.Services;
- using Sevriukoff.MetaRun.Mod.Trackers.Character;
+using Sevriukoff.MetaRun.Mod.Services;
 using Sevriukoff.MetaRun.Mod.Utils;
 using UnityEngine;
-using UnityEngine.UI;
-using Vector3 = UnityEngine.Vector3;
 
 namespace Sevriukoff.MetaRun.Mod;
 
@@ -36,7 +24,7 @@ public class Main : BaseUnityPlugin
     public const string PluginGuid = PluginAuthor + "." + PluginName;
     public const string PluginAuthor = "HookAjor";
     public const string PluginName = "MetaRun";
-    public const string PluginVersion = "0.3.0";
+    public const string PluginVersion = "0.4.0";
 
     private TrackerManager _trackerManager;
     private IProducer _producer;

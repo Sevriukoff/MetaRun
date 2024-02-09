@@ -50,8 +50,8 @@ public class BaseTrackerOptions : IBindableOptionGroup, IOptionsFor<BaseEventTra
     {
         yield return (IsActive, new CheckBoxConfig{ checkIfDisabled = () => false });
         yield return (MaxEventSummation, new StepSliderConfig{ max = 255, increment = 5 });
-        yield return (LingerMs, new StepSliderConfig{ max = 30000, increment = 100 });
-    }
+        yield return (LingerMs, new StepSliderConfig{ min = 100, max = 30000, increment = 100 });
+    }   
 
     public event Action AnyOptionChanged;
 }
